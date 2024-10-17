@@ -17,6 +17,7 @@
   - Blacklist
   - Whitelist
   - inviteConfirm
+  - etc
 
 ### PartyCommands
 

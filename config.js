@@ -36,14 +36,6 @@ class Settings {
     })
     AllCommandToggle = true;
 
-    @CheckboxProperty({
-        name: "help",
-        description: "Send help",
-        category: "General",
-        subcategory: "General"
-    })
-    Partyhelp = true;
-
     @SwitchProperty({
         name: "Party invite confirmation",
         description: "Confirm when sending a Party invite",
@@ -93,6 +85,14 @@ class Settings {
     debugmode = false;
 
     // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ Party ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+    @CheckboxProperty({
+        name: "help",
+        description: "Send help",
+        category: "Party",
+        subcategory: "General"
+    })
+    Partyhelp = true;
 
     @ButtonProperty({
         name: "Floor(tier)",

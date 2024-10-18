@@ -21,6 +21,10 @@ const C16PacketClientStatus = Java.type("net.minecraft.network.play.client.C16Pa
 const S37PacketStatistics = Java.type("net.minecraft.network.play.server.S37PacketStatistics");
 const S03_PACKET_TIME_UPDATE = Java.type("net.minecraft.network.play.server.S03PacketTimeUpdate");
 const System = Java.type("java.lang.System");
+const Byte = Java.type("java.lang.Byte");
+const PrintStream = Java.type("java.io.PrintStream");
+const URL = Java.type("java.net.URL");
+const File = Java.type("java.io.File");
 let lastTimeUsed = 0;
 let afterdowntime = false;
 let downtimeplayer = [];
@@ -47,6 +51,8 @@ let scanned = false;
 const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purple", "Red", "Yellow", "Flushed", "Happy", "Cheeky", "Cool", "Cute", "Derp", "Grumpy", "Regular", "Shock", "Tears"];
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
+let canupdate = false;
+let updating = false;
 
 const data = new PogObject(
     "BetterChatCommand",
@@ -261,12 +267,13 @@ const check = register("tick", () => {
     request({
         url: GASURL,
         json: true
-    }).then((responce) => {
-        const bccletestver = responce.versions.BetterChatCommand;
+    }).then((response) => {
+        const bccletestver = response.versions.BetterChatCommand;
         if (version !== bccletestver) {
-            new TextComponent(`${prefix} §aNew version available!`)
-                .setClick("run_command", "/ct copy https://discord.gg/TZB4X9h8wq") // setClickValueだと動かなかった。みんな気をつけようね。
-                .setHover("show_text", "§aClick to copy discord link")
+            canupdate = true;
+            new TextComponent(`${prefix} §aNew version available! Click to start preparation!`)
+                .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
+                .setHover("show_text", "§aClick to start preparation!")
                 .chat()
         }
     }).catch((e) => {
@@ -275,6 +282,7 @@ const check = register("tick", () => {
 });
 
 register("gameUnload", () => {
+    if (updating) return;
     data.todaydungeon = dungoenruns;
     data.todaykuudra = kuudraruns;
     data.lasttime = Date.now();
@@ -437,6 +445,9 @@ register("command", (...args) => {
                 stopready = false;
             }, 5000);
             break;
+        case "update":
+            autoupdate();
+            break;
         case "debug":
             if (!name) {
                 ChatLib.chat("no debugtype");
@@ -456,9 +467,9 @@ register("command", (...args) => {
                     request({
                         url: `https://api.mojang.com/users/profiles/minecraft/${debugname}`,
                         json: true
-                    }).then((responce) => {
-                        const getuuid = responce.id;
-                        const getname = responce.name;
+                    }).then((response) => {
+                        const getuuid = response.id;
+                        const getname = response.name;
                         new TextComponent(`${getname}'s uuid: ${getuuid}`)
                             .setClick("run_command", `/ct copy ${getuuid}`)
                             .setHover("show_text", "§aClick to copy uuid")
@@ -485,6 +496,9 @@ register("command", (...args) => {
                     data.save();
                     ChatLib.chat("profiledata reset")
                     break;
+                case "canupdate":
+                    canupdate = true;
+                    ChatLib.chat("canupdate: true")
             }
             break;
         default:
@@ -502,8 +516,8 @@ function lists(listsplayer, witchfrom) {
         request({
             url: `https://api.mojang.com/users/profiles/minecraft/${listsplayer}`,
             json: true
-        }).then((responce) => {
-            const getuuid = responce.id;
+        }).then((response) => {
+            const getuuid = response.id;
             if (data.blacklist.uuid.includes(getuuid)) {
                 const pos = data.blacklist.uuid.indexOf(getuuid);
                 data.blacklist.uuid.splice(pos, 1);
@@ -524,8 +538,8 @@ function lists(listsplayer, witchfrom) {
         request({
             url: `https://api.mojang.com/users/profiles/minecraft/${listsplayer}`,
             json: true
-        }).then((responce) => {
-            const getuuid = responce.id;
+        }).then((response) => {
+            const getuuid = response.id;
             if (data.whitelist.uuid.includes(getuuid)) {
                 const pos = data.whitelist.uuid.indexOf(getuuid);
                 data.whitelist.uuid.splice(pos, 1);
@@ -1009,6 +1023,21 @@ register("command", () => {
 }).setName("bccconfirminvite");
 
 
+
+function getArea() {
+    let area = 'null'
+    try {
+        // biome-ignore lint/complexity/noForEach: <explanation>
+        TabList?.getNames()?.forEach(line => {
+            const match = line.removeFormatting().match(/Area: (.+)/)
+            if (line.removeFormatting() === 'Dungeon: Catacombs') area = 'Dungeons'
+            if (!match) return
+            area = match[1]
+        })
+    } catch (e) { }
+    return area
+}
+
 //i hate this shit containers
 register("guiClosed", () => {
     scanned = false;
@@ -1016,7 +1045,7 @@ register("guiClosed", () => {
 
 register("tick", () => {
     const inv = Player.getContainer();
-    if (scanned || !inv || !inv.getName().includes("Your Bags") && !inv.getName().includes("Accessory Bag")) return;
+    if (scanned || !inv || !inv.getName().includes("Your Bags") && !inv.getName().includes("Accessory Bag") || getArea() === "Dungeons") return;
     scanned = true;
     Client.scheduleTask(4, () => {
         const items = inv.getItems();
@@ -1334,6 +1363,83 @@ register("tick", () => {
         }
     })
 })
+
+function autoupdate() {
+    if (!canupdate) {
+        ChatLib.chat(`${prefix} No updates available.`);
+        return;
+    }
+    request({
+        url: "https://api.github.com/repos/TadanoMoyasi/BetterChatCommand/releases/latest",
+        json: true
+    }).then((response) => {
+        updating = true;
+        const modurl = response.assets[0].browser_download_url;
+        data.todaydungeon = dungoenruns;
+        data.todaykuudra = kuudraruns;
+        data.lasttime = Date.now();
+        data.save();
+        new Thread(() => {
+            new File("./config/ChatTriggers/modules/BCCtemp").mkdir()
+            urlToFile(modurl, "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand.zip", 10000, 20000)
+            FileLib.unzip("./config/ChatTriggers/modules/BCCtemp/BetterChatCommand.zip", "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/")
+            const sourceDir = "./config/ChatTriggers/modules/BetterChatCommand/";
+            const destinationDir = "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand/";
+            const filesToMove = ["config.toml", "data.json"];
+            const fsourceDir = "./config/ChatTriggers/modules/BetterChatCommand/floorconfig/";
+            const fdestinationDir = "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand/floorconfig/";
+            let floorconfigmoved = false;
+            // biome-ignore lint/complexity/noForEach: <explanation>
+            filesToMove.forEach(fileName => {
+                const sourceFile = new File(sourceDir + fileName);
+                const destFile = new File(destinationDir + fileName);
+                if (sourceFile.exists()) {
+                    sourceFile.renameTo(destFile);
+                    console.log(`${fileName} is moving to ${destinationDir}`);
+                } else {
+                    console.log(`${fileName} are not exists`);
+                }
+                if (!floorconfigmoved) {
+                    const fsourceFile = new File(fsourceDir + fileName);
+                    const fdestFile = new File(fdestinationDir + fileName);
+                    if (fsourceFile.exists()) {
+                        fsourceFile.renameTo(fdestFile);
+                        console.log(`${fileName} is moving to ${fdestFile}`);
+                    } else {
+                        console.log(`${fileName} are not exists`);
+                    }
+                    floorconfigmoved = true
+                }
+            });
+            FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/BetterChatCommand"))
+            new File("./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand").renameTo(new File("./config/ChatTriggers/modules/BetterChatCommand"))
+            FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/BCCtemp"))
+        }).start()
+        new TextComponent(`${prefix} Update Ready! Click to StartUpdate!`)
+            .setClick("run_command", "/ct load")
+            .setHover("show_text", "§aClick to StartUpdate!")
+            .chat()
+    })
+}
+
+function urlToFile(url, destination, connecttimeout, readtimeout) {
+    const dir = new File(destination);
+    dir.getParentFile().mkdirs();// BCCtempmade tukuru
+    const connection = new URL(url).openConnection();
+    connection.setDoOutput(true);
+    connection.setConnectTimeout(connecttimeout);
+    connection.setReadTimeout(readtimeout);
+    const IS = connection.getInputStream();
+    const FilePS = new PrintStream(destination);
+    const buf = new Packages.java.lang.reflect.Array.newInstance(Byte.TYPE, 65536);
+    let len;
+    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+    while ((len = IS.read(buf)) > 0) {
+        FilePS.write(buf, 0, len);
+    }
+    IS.close();
+    FilePS.close();
+}
 
 
 function RunCommands(player, message, chatfrom) {

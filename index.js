@@ -3,7 +3,6 @@ import PartyFloorSettings from "./floorconfig/floorconfig";
 import Party from "../BloomCore/Party";
 import PogObject from "../PogData";
 import request from "requestV2/index";
-import { GASURL } from "./forgitignore";
 
 const metadata = JSON.parse(FileLib.read("BetterChatCommand", "metadata.json"));
 const version = metadata.version;
@@ -202,18 +201,12 @@ const data = new PogObject(
 const check = register("tick", () => {
     check.unregister();
     if (!data.firstTime) {
-        //I'm making this because I want to know how many people are using it. and Practice using GAS
-        request({
-            url: GASURL,
-            method: "POST",
-            headers: {
-                "Content-type": "application/Json",
-                "User-Agent": "Mozilla/5.0"
-            },
-            body: ({
-                "name": "BetterChatCommand"
-            })
-        })
+        ChatLib.chat("§b§l§m--------------------------------------------");
+        ChatLib.chat(ChatLib.getCenteredText(`§3§lBetterChatCommand ${version}`));
+        ChatLib.chat(ChatLib.getCenteredText("§fWelcome! /bcc to open settings!"));
+        ChatLib.chat(ChatLib.getCenteredText("§3Thank you for installing!"));
+        ChatLib.chat(ChatLib.getCenteredText("§cIf you find any bugs, please contact me.(tadanomoyasi)"));
+        ChatLib.chat("§b§l§m--------------------------------------------");
         data.firstTime = true;
     }
     //check somefeatures for dt requeue
@@ -248,7 +241,7 @@ const check = register("tick", () => {
         dungoenruns = data.todaydungeon;
         kuudraruns = data.todaykuudra;
     }
-    if (version !== data.lastversion) {
+    if (version !== data.lastversion && data.firstTime) {
         data.lastversion = version;
         data.save();
         const changelog = JSON.parse(FileLib.read("BetterChatCommand", "changelog.json"));
@@ -265,15 +258,15 @@ const check = register("tick", () => {
         }
     }
     request({
-        url: GASURL,
+        url: "https://api.github.com/repos/TadanoMoyasi/BetterChatCommand/releases/latest",
         json: true
     }).then((response) => {
-        const bccletestver = response.versions.BetterChatCommand;
+        const bccletestver = response.name;
         if (version !== bccletestver) {
             canupdate = true;
-            new TextComponent(`${prefix} §aNew version available! Click to start preparation!`)
+            new TextComponent(`${prefix} §aNew version available! Click to start update preparation!`)
                 .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
-                .setHover("show_text", "§aClick to start preparation!")
+                .setHover("show_text", "§aClick to start update preparation!")
                 .chat()
         }
     }).catch((e) => {
@@ -499,6 +492,10 @@ register("command", (...args) => {
                 case "canupdate":
                     canupdate = true;
                     ChatLib.chat("canupdate: true")
+                    break;
+                case "lookingat":
+                    ChatLib.chat(Player.lookingAt());
+                    break;
             }
             break;
         default:
@@ -1415,9 +1412,9 @@ function autoupdate() {
             new File("./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand").renameTo(new File("./config/ChatTriggers/modules/BetterChatCommand"))
             FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/BCCtemp"))
         }).start()
-        new TextComponent(`${prefix} Update Ready! Click to StartUpdate!`)
+        new TextComponent(`${prefix} Update Ready! Click to Start Update!`)
             .setClick("run_command", "/ct load")
-            .setHover("show_text", "§aClick to StartUpdate!")
+            .setHover("show_text", "§aClick to Start Update!")
             .chat()
     })
 }

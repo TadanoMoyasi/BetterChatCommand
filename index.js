@@ -7,7 +7,7 @@ import request from "requestV2/index";
 const metadata = JSON.parse(FileLib.read("BetterChatCommand", "metadata.json"));
 const version = metadata.version;
 const prefix = "§8[§aBCC§8]§r";
-const helps = "/bcc, /bcc help, /bcc blacklist (ign), /bcc whitelist (ign), /bcc (floor), /bcc cute, /bcc stop !help, !f(floor), !m(floor), !t(tier), !ptme, !warp, !wt, !inv (ign), !allinv, !promote (ign), !kick (ign), !dt (reason), !fps, !ping, !tps, !power, !pet, !coords, !cf, !dice, !rng, !boop (ign), !rps (ign), !meow (ign), !cute, !time, !playtime, !runs (dungeon/kuudra), !iq";
+const helps = "/bcc, /bcc help, /bcc blacklist (ign), /bcc whitelist (ign), /bcc (floor), /bcc cute, /bcc stop !help, !f(floor), !m(floor), !t(tier), !ptme, !warp, !wt, !inv (ign), !allinv, !promote (ign), !kick (ign), !dt (reason), !fps, !ping, !tps, !power, !pet, !coords, !cf, !dice, !rng, !rrng,  !boop (ign), !rps (ign), !meow (ign), !cute, !time, !playtime, !runs (dungeon/kuudra), !iq";
 const cutes = [
     "https://www.youtube.com/live/-i-T6scZfhM?si=JfH8KKAo5h7O2ho_",
     "https://www.youtube.com/live/creq_1I-llE?si=FR4pg0dNUVs_Mq_m",

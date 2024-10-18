@@ -25,32 +25,32 @@ const PrintStream = Java.type("java.io.PrintStream");
 const URL = Java.type("java.net.URL");
 const File = Java.type("java.io.File");
 let lastTimeUsed = 0;
-let afterdowntime = false;
-let downtimeplayer = [];
-let downtimereason = [];
-const rps = ["Rock", "Paper", "Scissors"];
-let enemyign = null;
-let rpsis = false;
-let enemychoose = null;
-let ichoose = null;
-let numa = 0;
-let enemyhavebcc = false;
-let tryget = 0;
-let rpsyou = false;
-let afterready = false;
-let readyplayer = [];
-let stopready = false;
-let joinfloor = null;
-let kuudraruns = 0;
-let dungoenruns = 0;
-let confirmwaittime = 60;
+let afterDownTime = false;
+let downTimePlayer = [];
+let downTimeReason = [];
+const RPS = ["Rock", "Paper", "Scissors"];
+let enemyIGN = null;
+let isRPSActive = false;
+let enemyChoose = null;
+let playerChoose = null;
+let drawCount = 0;
+let enemyHaveBCC = false;
+let responseWaitTime = 0;
+let rpsyou = false; //nanimo tukattenai
+let afterReady = false;
+let readyPlayer = [];
+let stopReady = false;
+let joinFloor = null;
+let sessionKuudraRuns = 0;
+let sessionDungoenRuns = 0;
+let confirmWaitTime = 60;
 let confirm = false;
-let somefeatureis = false;
+let somefeaturesExists = false;
 let scanned = false;
 const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purple", "Red", "Yellow", "Flushed", "Happy", "Cheeky", "Cool", "Cute", "Derp", "Grumpy", "Regular", "Shock", "Tears"];
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
-let canupdate = false;
+let canUpdate = false;
 let updating = false;
 
 const data = new PogObject(
@@ -212,9 +212,9 @@ const check = register("tick", () => {
     //check somefeatures for dt requeue
     const fileExists = FileLib.exists("somefeatures", "features/autorequeue.js");
     if (fileExists) {
-        somefeatureis = true;
+        somefeaturesExists = true;
     } else {
-        somefeatureis = false;
+        somefeaturesExists = false;
     }
     if (Settings.debugmode) {
         console.log("----BCC----");
@@ -222,7 +222,7 @@ const check = register("tick", () => {
         console.log(`jointime: ${data.jointime}`);
         console.log(`lasttime: ${data.lasttime}`);
         console.log(`nowtime: ${Date.now()}`);
-        console.log(`somefeature is ${somefeatureis}`);
+        console.log(`somefeature is ${somefeaturesExists}`);
     }
     if (data.jointime === 1 || data.lasttime === 1) {
         data.jointime = Date.now();
@@ -231,15 +231,15 @@ const check = register("tick", () => {
     }
     if (Date.now() - data.lasttime > 3600000) {
         data.jointime = Date.now();
-        kuudraruns = 0;
-        dungoenruns = 0;
-        data.todaydungeon = dungoenruns;
-        data.todaykuudra = kuudraruns;
+        sessionKuudraRuns = 0;
+        sessionDungoenRuns = 0;
+        data.todaydungeon = sessionDungoenRuns;
+        data.todaykuudra = sessionKuudraRuns;
         data.save();
         console.log("[BCC] reset data");
     } else {
-        dungoenruns = data.todaydungeon;
-        kuudraruns = data.todaykuudra;
+        sessionDungoenRuns = data.todaydungeon;
+        sessionKuudraRuns = data.todaykuudra;
     }
     if (version !== data.lastversion && data.firstTime) {
         data.lastversion = version;
@@ -249,7 +249,6 @@ const check = register("tick", () => {
             setTimeout(() => {
                 ChatLib.chat("§b§l§m--------------------------------------------");
                 ChatLib.chat(ChatLib.getCenteredText(`§3§lBetterChatCommand ${version}`));
-                // biome-ignore lint/complexity/noForEach: <explanation>
                 changelog.forEach(change => ChatLib.chat(ChatLib.getCenteredText(change))) // why i cant use for...of???
                 ChatLib.chat(ChatLib.getCenteredText("§3Thank you for installing!"));
                 ChatLib.chat(ChatLib.getCenteredText("§cIf you find any bugs, please contact me.(tadanomoyasi)"));
@@ -263,7 +262,7 @@ const check = register("tick", () => {
     }).then((response) => {
         const bccletestver = response.name;
         if (version !== bccletestver) {
-            canupdate = true;
+            canUpdate = true;
             new TextComponent(`${prefix} §aNew version available! Click to start update preparation!`)
                 .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
                 .setHover("show_text", "§aClick to start update preparation!")
@@ -276,8 +275,8 @@ const check = register("tick", () => {
 
 register("gameUnload", () => {
     if (updating) return;
-    data.todaydungeon = dungoenruns;
-    data.todaykuudra = kuudraruns;
+    data.todaydungeon = sessionDungoenRuns;
+    data.todaykuudra = sessionKuudraRuns;
     data.lasttime = Date.now();
     data.save();
 });
@@ -287,25 +286,25 @@ register("gameUnload", () => {
 // bcc debug getuuid tdmy
 //    command name  debugname
 register("command", (...args) => {
-    let floorchat = null;
-    let masterchat = null;
-    let tierchat = null;
+    let floorChat = null;
+    let masterChat = null;
+    let tierChat = null;
     if (args === undefined) {
         Settings.openGUI();
         return;
     }
     const command = args[0] === undefined ? undefined : args[0].toLowerCase();
-    let name = args[1];
+    const name = args[1];
     let debugname = args[2];
     if (command) {
-        floorchat = args[0].match(/f(\d)/i);
-        masterchat = args[0].match(/m(\d)/i);
-        tierchat = args[0].match(/t(\d)/i);
+        floorChat = args[0].match(/f(\d)/i);
+        masterChat = args[0].match(/m(\d)/i);
+        tierChat = args[0].match(/t(\d)/i);
     }
 
     //ここらへん綺麗にしたい所ではある
-    if (floorchat != null) {
-        switch (floorchat[1]) {
+    if (floorChat != null) {
+        switch (floorChat[1]) {
             case "0":
                 ChatLib.command("joininstance catacombs_Entranse");
                 break;
@@ -334,8 +333,8 @@ register("command", (...args) => {
         return;
     }
 
-    if (masterchat != null) {
-        switch (masterchat[1]) {
+    if (masterChat != null) {
+        switch (masterChat[1]) {
             case "1":
                 ChatLib.command("joininstance master_catacombs_floor_one");
                 break;
@@ -365,8 +364,8 @@ register("command", (...args) => {
         return;
     }
 
-    if (tierchat != null) {
-        switch (tierchat[1]) {
+    if (tierChat != null) {
+        switch (tierChat[1]) {
             case "1":
                 ChatLib.command("joininstance kuudra_Basic");
                 break;
@@ -408,9 +407,7 @@ register("command", (...args) => {
                 }
                 break;
             }
-            name = name.toLowerCase();
-            witchfrom = "blacklist";
-            lists(name, witchfrom);
+            lists(name, "blacklist");
             break;
         case "whitelist":
             if (!name) {
@@ -421,9 +418,7 @@ register("command", (...args) => {
                 }
                 break;
             }
-            name = name.toLowerCase();
-            witchfrom = "whitelist";
-            lists(name, witchfrom);
+            lists(name, "whitelist");
             break;
         case "cute": {
             const cutenum = Math.floor(Math.random() * 6);
@@ -432,14 +427,14 @@ register("command", (...args) => {
             break;
         }
         case "stop":
-            stopready = true;
+            stopReady = true;
             ChatLib.chat(`${prefix} Rejoin Stoped`);
             setTimeout(() => {
-                stopready = false;
+                stopReady = false;
             }, 5000);
             break;
         case "update":
-            autoupdate();
+            autoUpdate();
             break;
         case "debug":
             if (!name) {
@@ -490,8 +485,8 @@ register("command", (...args) => {
                     ChatLib.chat("profiledata reset")
                     break;
                 case "canupdate":
-                    canupdate = true;
-                    ChatLib.chat("canupdate: true")
+                    canUpdate = true;
+                    ChatLib.chat("canUpdate: true")
                     break;
                 case "lookingat":
                     ChatLib.chat(Player.lookingAt());
@@ -508,10 +503,11 @@ register("command", () => {
 }).setName("bcchelp");
 
 //https://api.mojang.com/users/profiles/minecraft/tdmy
-function lists(listsplayer, witchfrom) {
-    if (witchfrom === "blacklist") {
+function lists(listsPlayer, witchFrom) {
+    const lowerCaseListsPlayer = listsPlayer.toLowerCase();
+    if (witchFrom === "blacklist") {
         request({
-            url: `https://api.mojang.com/users/profiles/minecraft/${listsplayer}`,
+            url: `https://api.mojang.com/users/profiles/minecraft/${lowerCaseListsPlayer}`,
             json: true
         }).then((response) => {
             const getuuid = response.id;
@@ -519,11 +515,11 @@ function lists(listsplayer, witchfrom) {
                 const pos = data.blacklist.uuid.indexOf(getuuid);
                 data.blacklist.uuid.splice(pos, 1);
                 data.blacklist.name.splice(pos, 1);
-                ChatLib.chat(`${prefix} §f${listsplayer} §chas been removed from blacklist.`);
+                ChatLib.chat(`${prefix} §f${lowerCaseListsPlayer} §chas been removed from blacklist.`);
             } else {
                 data.blacklist.uuid.push(getuuid);
-                data.blacklist.name.push(listsplayer.toLowerCase());
-                ChatLib.chat(`${prefix} §f${listsplayer} §ahas been added to the blacklist.`);
+                data.blacklist.name.push(lowerCaseListsPlayer);
+                ChatLib.chat(`${prefix} §f${lowerCaseListsPlayer} §ahas been added to the blacklist.`);
             }
         }).catch((e) => {
             ChatLib.chat(`${prefix} §cError: §f${JSON.parse(e).errorMessage}`);
@@ -531,9 +527,9 @@ function lists(listsplayer, witchfrom) {
         data.save();
         return;
     }
-    if (witchfrom === "whitelist") {
+    if (witchFrom === "whitelist") {
         request({
-            url: `https://api.mojang.com/users/profiles/minecraft/${listsplayer}`,
+            url: `https://api.mojang.com/users/profiles/minecraft/${lowerCaseListsPlayer}`,
             json: true
         }).then((response) => {
             const getuuid = response.id;
@@ -541,11 +537,11 @@ function lists(listsplayer, witchfrom) {
                 const pos = data.whitelist.uuid.indexOf(getuuid);
                 data.whitelist.uuid.splice(pos, 1);
                 data.whitelist.name.splice(pos, 1);
-                ChatLib.chat(`${prefix} §f${listsplayer} §chas been removed from whitelist.`);
+                ChatLib.chat(`${prefix} §f${lowerCaseListsPlayer} §chas been removed from whitelist.`);
             } else {
                 data.whitelist.uuid.push(getuuid);
-                data.whitelist.name.push(listsplayer.toLowerCase());
-                ChatLib.chat(`${prefix} §f${listsplayer} §ahas been added to the whitelist.`);
+                data.whitelist.name.push(lowerCaseListsPlayer);
+                ChatLib.chat(`${prefix} §f${lowerCaseListsPlayer} §ahas been added to the whitelist.`);
             }
         }).catch((e) => {
             ChatLib.chat(`${prefix} §cError: §f${JSON.parse(e).errorMessage}`);
@@ -555,8 +551,8 @@ function lists(listsplayer, witchfrom) {
     }
 }
 
-register("command", (listsplayer) => {
-    if (!listsplayer) {
+register("command", (listsPlayer) => {
+    if (!listsPlayer) {
         if (data.blacklist.name.length !== 0) {
             ChatLib.chat(`${prefix} §8blacklist§f: §f${data.blacklist.name.toString()}`);
         } else {
@@ -564,12 +560,11 @@ register("command", (listsplayer) => {
         }
         return;
     }
-    witchfrom = "blacklist";
-    lists(listsplayer, witchfrom);
+    lists(listsPlayer, "blacklist");
 }).setName("bccblacklist");
 
-register("command", (listsplayer) => {
-    if (!listsplayer) {
+register("command", (listsPlayer) => {
+    if (!listsPlayer) {
         if (data.whitelist.name.length !== 0) {
             ChatLib.chat(`${prefix} §fwhitelist: §f${data.whitelist.name.toString()}`);
         } else {
@@ -577,15 +572,13 @@ register("command", (listsplayer) => {
         }
         return;
     }
-    witchfrom = "whitelist";
-    lists(listsplayer, witchfrom);
+    lists(listsPlayer, "whitelist");
 }).setName("bccwhitelist");
 
 register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
     if (Date.now() - lastTimeUsed < 1000) return;
-    chatfrom = "party";
-    RunCommands(player, message, chatfrom);
+    runCommand(player, message, "party");
     lastTimeUsed = Date.now();
 }).setCriteria(/^Party >(?: \[.+\])? (\w+)(?: [Ⓑ|ቾ|⚒])?: !(.+)/);
 
@@ -597,25 +590,15 @@ register("chat", (player, message) => {
 register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
     if (Date.now() - lastTimeUsed < 1000) return;
-    chatfrom = "dm";
-    RunCommands(player, message, chatfrom);
+    runCommand(player, message, "dm");
     lastTimeUsed = Date.now();
 }).setCriteria(/^From(?: \[.+\])? (\w+): !(.+)/);
 
 register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
-    if (!Settings.debugmode) return;
-    chatfrom = "party";
-    RunCommands(player, message, chatfrom);
-    lastTimeUsed = Date.now();
-}).setCriteria(/^<(\w+)> !(.+)/);
-
-register("chat", (player, message) => {
-    if (!Settings.AllCommandToggle) return;
     if (!Settings.allchattoggle) return;
     if (Date.now() - lastTimeUsed < 3000) return;
-    chatfrom = "all";
-    RunCommands(player, message, chatfrom);
+    runCommand(player, message, "all");
     lastTimeUsed = Date.now();
 }).setCriteria(/^\[\d+\](?: .+)?(?: \[.+\])? (\w+)(?: [Ⓑ|ቾ|⚒])?: !(.+)/);
 //[400] ➶ [MVP+] TdMy ቾ: !dice
@@ -631,26 +614,25 @@ let saidDt = false;
 register("chat", () => {
     if (!Settings.AllCommandToggle) return;
     if (!Settings.Partydt) return;
-    if (afterdowntime) {
-        if (saidDt) return;
-        let dtchat = "pc Need dt: ";
-        for (let i = 0; i < downtimeplayer.length; i++) {
-            dtchat += `${downtimeplayer[i]}: ${downtimereason[i]}`;
-            if (i < downtimeplayer.length - 1) {
-                dtchat += ", ";
-            }
+    if (!afterDownTime) return;
+    if (saidDt) return;
+    let dtchat = "pc Need dt: ";
+    for (let i = 0; i < downTimePlayer.length; i++) {
+        dtchat += `${downTimePlayer[i]}: ${downTimeReason[i]}`;
+        if (i < downTimePlayer.length - 1) {
+            dtchat += ", ";
         }
-        saidDt = true;
-        setTimeout(() => {
-            ChatLib.command(dtchat);
-        }, 1000);
-        setTimeout(() => {
-            saidDt = false;
-            afterdowntime = false;
-            downtimeplayer = [];
-            downtimereason = [];
-        }, 5000);
     }
+    saidDt = true;
+    setTimeout(() => {
+        ChatLib.command(dtchat);
+    }, 1000);
+    setTimeout(() => {
+        saidDt = false;
+        afterDownTime = false;
+        downTimePlayer = [];
+        downTimeReason = [];
+    }, 5000);
 }).setCriteria(/ *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/);
 
 // ■■■   ■■■    ■    ■■    ■    ■
@@ -658,35 +640,33 @@ register("chat", () => {
 // ■■■   ■■■  ■■■■■  ■  ■    ■
 // ■ ■   ■    ■   ■  ■  ■    ■
 // ■  ■  ■■■  ■   ■  ■■■     ■
-function pready(readyname) {
-    if (afterready) {
-        if (readyplayer.length > 0) {
-            if (readyplayer.includes(readyname)) {
-                const spl = readyplayer.indexOf(readyname);
-                readyplayer.splice(spl, 1);
+function setPlayerReady(readyName) {
+    if (!afterReady) return;
+    if (readyPlayer.length === 0) return;
+    if (readyPlayer.includes(readyName)) {
+        const spl = readyPlayer.indexOf(readyName);
+        readyPlayer.splice(spl, 1);
+    }
+    if (readyPlayer.length === 0) {
+        const rtext = `${prefix} Checked the ready status of all players who !dt'd. After 3 seconds, you will automatically enter the floor you were previously on. click chat to stop rejoin!`;
+        new TextComponent(rtext)
+            .setClick("run_command", "/bcc stop")
+            .setHover("show_text", "§aClick to stop rejoin!")
+            .chat();
+        setTimeout(() => {
+            if (!stopReady) {
+                if (joinFloor == null) {
+                    ChatLib.chat(`${prefix} failed to get previous floor`);
+                } else {
+                    ChatLib.command(`joininstance ${joinFloor}`);
+                }
             }
-            if (readyplayer.length === 0) {
-                const rtext = `${prefix} Checked the ready status of all players who !dt'd. After 3 seconds, you will automatically enter the floor you were previously on. click chat to stop rejoin!`;
-                new TextComponent(rtext)
-                    .setClick("run_command", "/bcc stop")
-                    .setHover("show_text", "§aClick to stop rejoin!")
-                    .chat();
-                setTimeout(() => {
-                    if (!stopready) {
-                        if (joinfloor == null) {
-                            ChatLib.chat(`${prefix} failed to get previous floor`);
-                        } else {
-                            ChatLib.command(`joininstance ${joinfloor}`);
-                        }
-                    }
-                    afterready = false;
-                    stopready = false;
-                    readyplayer = [];
-                }, 3000);
-            } else {
-                ChatLib.chat(`${prefix} still have dt player`);
-            }
-        }
+            afterReady = false;
+            stopReady = false;
+            readyPlayer = [];
+        }, 3000);
+    } else {
+        ChatLib.chat(`${prefix} still have dt player`);
     }
 }
 
@@ -694,49 +674,49 @@ register("chat", (mode, floor) => {
     if (mode === "MM") {
         switch (floor) {
             case "I":
-                joinfloor = "master_catacombs_floor_one";
+                joinFloor = "master_catacombs_floor_one";
                 break;
             case "II":
-                joinfloor = "master_catacombs_floor_two";
+                joinFloor = "master_catacombs_floor_two";
                 break;
             case "III":
-                joinfloor = "master_catacombs_floor_three";
+                joinFloor = "master_catacombs_floor_three";
                 break;
             case "IV":
-                joinfloor = "master_catacombs_floor_four";
+                joinFloor = "master_catacombs_floor_four";
                 break;
             case "V":
-                joinfloor = "master_catacombs_floor_five";
+                joinFloor = "master_catacombs_floor_five";
                 break;
             case "VI":
-                joinfloor = "master_catacombs_floor_six";
+                joinFloor = "master_catacombs_floor_six";
                 break;
             case "VII":
-                joinfloor = "master_catacombs_floor_seven";
+                joinFloor = "master_catacombs_floor_seven";
                 break;
         }
     } else {
         switch (floor) {
             case "I":
-                joinfloor = "catacombs_floor_one";
+                joinFloor = "catacombs_floor_one";
                 break;
             case "II":
-                joinfloor = "catacombs_floor_two";
+                joinFloor = "catacombs_floor_two";
                 break;
             case "III":
-                joinfloor = "catacombs_floor_three";
+                joinFloor = "catacombs_floor_three";
                 break;
             case "IV":
-                joinfloor = "catacombs_floor_four";
+                joinFloor = "catacombs_floor_four";
                 break;
             case "V":
-                joinfloor = "catacombs_floor_five";
+                joinFloor = "catacombs_floor_five";
                 break;
             case "VI":
-                joinfloor = "catacombs_floor_six";
+                joinFloor = "catacombs_floor_six";
                 break;
             case "VII":
-                joinfloor = "catacombs_floor_seven";
+                joinFloor = "catacombs_floor_seven";
                 break;
         }
     }
@@ -750,40 +730,40 @@ register("chat", (mode, floor) => {
 register("chat", (tier) => {
     switch (tier) {
         case "Basic":
-            joinfloor = "kuudra_basic";
+            joinFloor = "kuudra_basic";
             break;
         case "Hot":
-            joinfloor = "kuudra_hot";
+            joinFloor = "kuudra_hot";
             break;
         case "Burning":
-            joinfloor = "kuudra_burning";
+            joinFloor = "kuudra_burning";
             break;
         case "Fiery":
-            joinfloor = "kuudra_fiery";
+            joinFloor = "kuudra_fiery";
             break;
         case "Infernal":
-            joinfloor = "kuudra_infernal";
+            joinFloor = "kuudra_infernal";
             break;
     }
 }).setCriteria(/(?:\[.+\] )?\w+ entered Kuudra's Hollow, (.+) Tier!/).setContains();
 
 register("chat", () => {
-    joinfloor = "catacombs_entrance"
+    joinFloor = "catacombs_entrance"
 }).setCriteria(/(?:\[.+\] )?\w+ entered The Catacombs, Entrance!/).setContains();
 
 //reset
 register("chat", () => {
-    if (downtimeplayer.length !== 0) return;
-    afterready = false;
-    stopready = false;
-    readyplayer = [];
+    if (downTimePlayer.length !== 0) return;
+    afterReady = false;
+    stopReady = false;
+    readyPlayer = [];
 }).setCriteria("[NPC] Mort: You should find it useful if you get lost.");
 
 register("chat", () => {
-    if (downtimeplayer.length !== 0) return;
-    afterready = false;
-    stopready = false;
-    readyplayer = [];
+    if (downTimePlayer.length !== 0) return;
+    afterReady = false;
+    stopReady = false;
+    readyPlayer = [];
 }).setCriteria("[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!");
 
 // ■■■   ■■■   ■■■
@@ -791,153 +771,148 @@ register("chat", () => {
 // ■■■   ■■■   ■■■
 // ■ ■   ■       ■
 // ■  ■  ■     ■■■
-function checkenemy() {
+function checkEnemy() {
     const whatchoice = Math.floor(Math.random() * 3);
-    ichoose = rps[whatchoice];
-    if (tryget === 0) {
-        rpsis = false;
+    playerChoose = RPS[whatchoice];
+    if (responseWaitTime === 0) {
+        isRPSActive = false;
         return;
     }
-    if (enemyhavebcc) {
-        ChatLib.command(`pc I choose ${ichoose}`);
+    if (enemyHaveBCC) {
+        ChatLib.command(`pc I choose ${playerChoose}`);
     } else {
         setTimeout(() => {
-            checkenemy();
-            tryget--;
+            checkEnemy();
+            responseWaitTime--;
         }, 100); //0.1s
     }
 }
 
-function getenemychoose() {
-    if (enemychoose != null) {
+function getEnemyChoose() {
+    if (enemyChoose != null) {
         const whatchoice = Math.floor(Math.random() * 3);
-        ichoose = rps[whatchoice];
+        playerChoose = RPS[whatchoice];
         setTimeout(() => {
-            ChatLib.command(`pc I choose ${ichoose}`);
+            ChatLib.command(`pc I choose ${playerChoose}`);
         }, 500);
     } else {
         setTimeout(() => {
-            getenemychoose();
+            getEnemyChoose();
         }, 100);
     }
 }
 
-function winrps() {
+function winRPS() {
     setTimeout(() => {
         ChatLib.command("pc This battle is mine");
     }, 2000);
-    enemychoose = null;
-    enemyign = null;
-    ichoose = null;
+    enemyChoose = null;
+    enemyIGN = null;
+    playerChoose = null;
     dorpsnow = false;
-    rpsis = false;
+    isRPSActive = false;
     rpsyou = false;
-    enemyhavebcc = false;
-    numa = 0;
+    enemyHaveBCC = false;
+    drawCount = 0;
 }
 
-function loserps() {
+function loseRPS() {
     setTimeout(() => {
         ChatLib.command("pc uh nah");
     }, 2000);
-    enemychoose = null;
-    enemyign = null;
-    ichoose = null;
+    enemyChoose = null;
+    enemyIGN = null;
+    playerChoose = null;
     dorpsnow = false;
-    rpsis = false;
+    isRPSActive = false;
     rpsyou = false;
-    enemyhavebcc = false;
-    numa = 0;
+    enemyHaveBCC = false;
+    drawCount = 0;
 }
 
-function nextrps() {
-    numa++;
-    enemychoose = null;
-    ichoose = null;
-    ichoose = rps[whatchoice];
+function drawRPS() {
+    drawCount++;
+    enemyChoose = null;
+    playerChoose = null;
+    const whatchoice = Math.floor(Math.random() * 3);
+    playerChoose = RPS[whatchoice];
     setTimeout(() => {
         if (rpsyou) {
-            ChatLib.command(`pc I choose ${ichoose}`);
+            ChatLib.command(`pc I choose ${playerChoose}`);
         } else if (!rpsyou) {
-            getenemychoose();
+            getEnemyChoose();
         }
     }, 2000);
 }
 
-register("chat", (player, hand) => {
+register("chat", (player, enemyhand) => {
     if (!Settings.AllCommandToggle) return;
     if (player === Player.getName()) return;
-    const getchoose = `${hand}`;
     if (player.includes("ቾ") || player.includes("⚒") || player.includes("Ⓑ")) {
         // biome-ignore lint/style/noParameterAssign: <explanation>
         player = player.split(" ")[0];
     }
-    realplayername = player;
-    const strplayername = realplayername.toString().toLowerCase();
-    if (rpsis === true) {
-        if (strplayername === enemyign) {
-            if (!enemyhavebcc) {
-                enemyhavebcc = true;
+    const lowerCasePlayerName = player.toString().toLowerCase();
+    if (isRPSActive !== true) return;
+    if (lowerCasePlayerName !== enemyIGN) return;
+    if (!enemyHaveBCC) {
+        enemyHaveBCC = true;
+    }
+    if (enemyChoose != null) return;
+    enemyChoose = enemyhand;
+    changed = true;
+    if (playerChoose == null && enemyChoose == null && changed === false) return;
+    changed = false;
+    if (drawCount > 4) {
+        enemyChoose = null;
+        enemyIGN = null;
+        playerChoose = null;
+        dorpsnow = false;
+        isRPSActive = false;
+        drawCount = 0;
+        ChatLib.command("pc Five times, the RPS game Forced end.");
+        return;
+    }
+    switch (enemyChoose) {
+        case "Paper":
+            switch (playerChoose) {
+                case "Paper":
+                    drawRPS();
+                    break;
+                case "Rock":
+                    loseRPS();
+                    break;
+                case "Scissors":
+                    winRPS();
+                    break;
             }
-            if (enemychoose == null) {
-                enemychoose = getchoose;
-                changed = true;
-                if (ichoose != null && enemychoose != null && changed === true) {
-                    changed = false;
-                    if (numa > 4) {
-                        enemychoose = null;
-                        enemyign = null;
-                        ichoose = null;
-                        dorpsnow = false;
-                        rpsis = false;
-                        numa = 0;
-                        ChatLib.command("pc Five times, the RPS game Forced end.");
-                        return;
-                    }
-                    switch (enemychoose) {
-                        case "Paper":
-                            switch (ichoose) {
-                                case "Paper":
-                                    nextrps();
-                                    break;
-                                case "Rock":
-                                    loserps();
-                                    break;
-                                case "Scissors":
-                                    winrps();
-                                    break;
-                            }
-                            break;
-                        case "Rock":
-                            switch (ichoose) {
-                                case "Paper":
-                                    winrps();
-                                    break;
-                                case "Rock":
-                                    nextrps();
-                                    break;
-                                case "Scissors":
-                                    loserps();
-                                    break;
-                            }
-                            break;
-                        case "Scissors":
-                            switch (ichoose) {
-                                case "Paper":
-                                    loserps();
-                                    break;
-                                case "Rock":
-                                    winrps();
-                                    break;
-                                case "Scissors":
-                                    nextrps();
-                                    break;
-                            }
-                            break;
-                    }
-                }
+            break;
+        case "Rock":
+            switch (playerChoose) {
+                case "Paper":
+                    winRPS();
+                    break;
+                case "Rock":
+                    drawRPS();
+                    break;
+                case "Scissors":
+                    loseRPS();
+                    break;
             }
-        }
+            break;
+        case "Scissors":
+            switch (playerChoose) {
+                case "Paper":
+                    loseRPS();
+                    break;
+                case "Rock":
+                    winRPS();
+                    break;
+                case "Scissors":
+                    drawRPS();
+                    break;
+            }
+            break;
     }
 }).setCriteria(/^Party >(?: \[.+\])? (\w+) ?[Ⓑ|ቾ|⚒]?: I choose (.+)/);
 
@@ -945,13 +920,13 @@ register("chat", (player, hand) => {
 register("chat", () => {
     if (!Settings.AllCommandToggle) return;
     if (!Settings.Partyruns) return;
-    kuudraruns++;
+    sessionKuudraRuns++;
 }).setCriteria(/ *KUUDRA DOWN!/);
 
 register("chat", () => {
     if (!Settings.AllCommandToggle) return;
     if (!Settings.Partyruns) return;
-    dungoenruns++;
+    sessionDungoenRuns++;
 }).setCriteria(/ *> EXTRA STATS </);
 
 function formatSeconds(seconds) {
@@ -997,22 +972,22 @@ register("packetReceived", (packet) => {
     }
 });
 
-function inviteConfirm(invname) {
+function inviteConfirm(inviteName) {
     if (confirm) {
-        ChatLib.command(`p invite ${invname}`);
-        confirmwaittime = 0;
+        ChatLib.command(`p invite ${inviteName}`);
+        confirmWaitTime = 0;
         confirm = false;
     } else {
-        if (confirmwaittime === 0) return;
+        if (confirmWaitTime === 0) return;
         setTimeout(() => {
-            confirmwaittime--;
-            inviteConfirm(invname);
+            confirmWaitTime--;
+            inviteConfirm(inviteName);
         }, 1000);
     }
 }
 
 register("command", () => {
-    if (confirmwaittime === 0) {
+    if (confirmWaitTime !== 0) {
         ChatLib.chat(`${prefix} Confirm Timed Out`);
         return;
     }
@@ -1020,11 +995,9 @@ register("command", () => {
 }).setName("bccconfirminvite");
 
 
-
 function getArea() {
     let area = 'null'
     try {
-        // biome-ignore lint/complexity/noForEach: <explanation>
         TabList?.getNames()?.forEach(line => {
             const match = line.removeFormatting().match(/Area: (.+)/)
             if (line.removeFormatting() === 'Dungeon: Catacombs') area = 'Dungeons'
@@ -1049,30 +1022,26 @@ register("tick", () => {
         let mp = "";
         let power = "";
         let tuning = "";
-        let enrichamount = 0;
+        let enrichAmount = 0;
         let enrich = "";
         let max = 0;
         let now = 0;
         if (inv.getName().includes("Your Bags")) {
-            // biome-ignore lint/complexity/noForEach: <explanation>
-            items.slice(24, 25).forEach(item => {
-                const lore = item?.getLore();
-                let canscantuning = false;
-                for (let line of lore) {
-                    line = ChatLib.removeFormatting(line);
-                    if (line.toString()?.includes("+") && canscantuning) {
-                        tuning += line.substring(line.indexOf("+") + 1, line.indexOf(" "));
-                    } else if (line.toString()?.includes("Magical Power:")) {
-                        mp = line.substring(line.indexOf(":") + 2)
-                    } else if (line.toString()?.includes("Selected Power:")) {
-                        power = line.substring(line.indexOf(":") + 2)
-                    } else if (line.toString()?.includes("Tuning:")) {
-                        canscantuning = true;
-                    }
+            const lore = inv.getStackInSlot(24).getLore();
+            let canscantuning = false;
+            for (let line of lore) {
+                line = ChatLib.removeFormatting(line);
+                if (line.toString()?.includes("+") && canscantuning) {
+                    tuning += line.substring(line.indexOf("+") + 1, line.indexOf(" "));
+                } else if (line.toString()?.includes("Magical Power:")) {
+                    mp = line.substring(line.indexOf(":") + 2)
+                } else if (line.toString()?.includes("Selected Power:")) {
+                    power = line.substring(line.indexOf(":") + 2)
+                } else if (line.toString()?.includes("Tuning:")) {
+                    canscantuning = true;
                 }
-            })
+            }
         } else if (inv.getName().includes("Accessory Bag Thaumaturgy")) {
-            // biome-ignore lint/complexity/noForEach: <explanation>
             items.slice(9, 52).forEach(item => {
                 if (!item || item.getID() !== 404 && item.getID() !== 160 || item.getName().removeFormatting() === " ") return;
                 const lore = item.getLore();
@@ -1097,7 +1066,6 @@ register("tick", () => {
             if (enrichScanned !== now - 1) return;
             enrichScanned++;
             let enrichChecked = false;
-            // biome-ignore lint/complexity/noForEach: <explanation>
             items.slice(0, inv.getSize() - 45).forEach(item => {
                 if (!item) return;
                 const lore = item.getLore();
@@ -1110,7 +1078,7 @@ register("tick", () => {
                     lines++;
                     line = ChatLib.removeFormatting(line)
                     if (line.toString()?.includes("Enriched with")) {
-                        enrichamount++;
+                        enrichAmount++;
                         if (!enrichChecked) {
                             enrich = line.substring(14)
                             enrichChecked = true;
@@ -1129,11 +1097,11 @@ register("tick", () => {
         if (tuning !== "") {
             data.profile.tuning = tuning;
         }
-        if (enrichamount !== 0) {
+        if (enrichAmount !== 0) {
             if (max > now) {
-                enrichScannedAmount += enrichamount;
+                enrichScannedAmount += enrichAmount;
             } else if (max === now) {
-                enrichScannedAmount += enrichamount;
+                enrichScannedAmount += enrichAmount;
                 data.profile.enrichamount = enrichScannedAmount;
                 enrichScannedAmount = 0;
                 enrichScanned = 0;
@@ -1236,20 +1204,17 @@ register("tick", () => {
             const slayertype = ["Zombie", "Spider", "Wolf", "", "Enderman", "Vampire", "Blaze"];
             let slayerscanned = 0;
             const slayer = slayertype[slayerscanned];
-            // biome-ignore lint/complexity/noForEach: <explanation>
             items.slice(19, 26).forEach(item => {
                 const lore = item?.getLore();
                 if (!lore) {
                     slayerscanned++;
                     return;
                 }
-                let canscandrop = false;
                 let scanline = 0;
                 for (let line of lore) {
                     scanline--;
                     line = ChatLib.removeFormatting(line);
                     if (line.toString()?.includes("Selected Drop")) {
-                        canscandrop = true;
                         scanline = 2;
                     } else if (line.toString()?.includes("Progress:")) {
                         data.RNG.Slayer[slayer][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
@@ -1259,7 +1224,6 @@ register("tick", () => {
                     }
                     if (scanline === 1) {
                         data.RNG.Slayer[slayer][0] = line.substring(0); //こーれ天才です。任せてください。
-                        canscandrop = false;
                     }
                 }
                 slayerscanned++;
@@ -1268,10 +1232,8 @@ register("tick", () => {
         } else if (inv.getName().includes("Catacombs RNG Meter")) {
             let catacombsfloor = 1;
             let catacombstype = "Normal";
-            // biome-ignore lint/complexity/noForEach: <explanation>
             items.slice(19, 35).forEach(item => {
                 const lore = item?.getLore();
-                let canscandrop = false;
                 let scanline = 0;
                 for (let line of lore) {
                     scanline--;
@@ -1280,7 +1242,6 @@ register("tick", () => {
                         catacombstype = "Master";
                         catacombsfloor = 1;
                     } else if (line.toString()?.includes("Selected Drop")) {
-                        canscandrop = true;
                         scanline = 2;
                     } else if (line.toString()?.includes("Progress:")) {
                         if (catacombstype === "Normal") {
@@ -1309,7 +1270,6 @@ register("tick", () => {
                             const masterfloor = `M${catacombsfloor}`;
                             data.RNG.Catacombs[catacombstype][masterfloor][0] = line.substring(0);
                         }
-                        canscandrop = false;
                     }
                 }
                 catacombsfloor++;
@@ -1318,12 +1278,10 @@ register("tick", () => {
         } else if (inv.getName().includes("Crystal Nucleus RNG Meter")) {
             const lore = inv.getStackInSlot(4).getLore();
             let scanline = 0;
-            let canscandrop = false;
             for (let line of lore) {
                 scanline--;
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
-                    canscandrop = true;
                     scanline = 2;
                 } else if (line.toString()?.includes("Progress:")) {
                     data.RNG.Nucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
@@ -1333,18 +1291,15 @@ register("tick", () => {
                 }
                 if (scanline === 1) {
                     data.RNG.Nucleus[0] = line.substring(0);
-                    canscandrop = false;
                 }
             }
         } else {
             const lore = inv.getStackInSlot(15).getLore();
             let scanline = 0;
-            let canscandrop = false;
             for (let line of lore) {
                 scanline--;
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
-                    canscandrop = true;
                     scanline = 2;
                 } else if (line.toString()?.includes("Progress:")) {
                     data.RNG.Nucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
@@ -1354,15 +1309,14 @@ register("tick", () => {
                 }
                 if (scanline === 1) {
                     data.RNG.Nucleus[0] = line.substring(0);
-                    canscandrop = false;
                 }
             }
         }
     })
 })
 
-function autoupdate() {
-    if (!canupdate) {
+function autoUpdate() {
+    if (!canUpdate) {
         ChatLib.chat(`${prefix} No updates available.`);
         return;
     }
@@ -1372,8 +1326,8 @@ function autoupdate() {
     }).then((response) => {
         updating = true;
         const modurl = response.assets[0].browser_download_url;
-        data.todaydungeon = dungoenruns;
-        data.todaykuudra = kuudraruns;
+        data.todaydungeon = sessionDungoenRuns;
+        data.todaykuudra = sessionKuudraRuns;
         data.lasttime = Date.now();
         data.save();
         new Thread(() => {
@@ -1386,7 +1340,6 @@ function autoupdate() {
             const fsourceDir = "./config/ChatTriggers/modules/BetterChatCommand/floorconfig/";
             const fdestinationDir = "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand/floorconfig/";
             let floorconfigmoved = false;
-            // biome-ignore lint/complexity/noForEach: <explanation>
             filesToMove.forEach(fileName => {
                 const sourceFile = new File(sourceDir + fileName);
                 const destFile = new File(destinationDir + fileName);
@@ -1419,13 +1372,13 @@ function autoupdate() {
     })
 }
 
-function urlToFile(url, destination, connecttimeout, readtimeout) {
+function urlToFile(url, destination, connectTimeOut, readTimeOut) {
     const dir = new File(destination);
     dir.getParentFile().mkdirs();// BCCtempmade tukuru
     const connection = new URL(url).openConnection();
     connection.setDoOutput(true);
-    connection.setConnectTimeout(connecttimeout);
-    connection.setReadTimeout(readtimeout);
+    connection.setConnectTimeout(connectTimeOut);
+    connection.setReadTimeout(readTimeOut);
     const IS = connection.getInputStream();
     const FilePS = new PrintStream(destination);
     const buf = new Packages.java.lang.reflect.Array.newInstance(Byte.TYPE, 65536);
@@ -1439,352 +1392,274 @@ function urlToFile(url, destination, connecttimeout, readtimeout) {
 }
 
 
-function RunCommands(player, message, chatfrom) {
-    const strplayername = player.toString().toLowerCase();
-    const Getmessage = message.toString().toLowerCase();
-    const parts = Getmessage.split(" ");
-    const firstmessage = parts[0];
-    const lowgetname = Player.getName().toLowerCase();
-    const floorchat = firstmessage.match(/^f(\d)$/);
-    const masterchat = firstmessage.match(/^m(\d)$/);
-    const tierchat = firstmessage.match(/^t(\d)$/);
-    const white = data.whitelist.name;
-    const black = data.blacklist.name;
-    let docommand = null;
+function runCommand(player, message, chatFrom) {
+    const lowerCasePlayerName = player.toString().toLowerCase();
+    const parts = message.toString().toLowerCase().split(" ");
+    const lowerCaseGetName = Player.getName().toLowerCase();
+    const floorChat = parts[0].match(/^f(\d)$/);
+    const masterChat = parts[0].match(/^m(\d)$/);
+    const tierChat = parts[0].match(/^t(\d)$/);
+    let doCommand = null;
+    const isInWhitelist = data.whitelist.name.includes(lowerCasePlayerName);
+    const isInBlacklist = data.blacklist.name.includes(lowerCasePlayerName);
+    const isWhitelistEnabled = Settings.whitelisttoggle;
+    const isWhiteOnlyLeader = Settings.whiteonlyleader;
+    const isBlackOnlyLeader = Settings.blackonlyleader;
+    const shouldDoCommand = (isWhitelistEnabled && (isInWhitelist || (isWhiteOnlyLeader && !isInWhitelist))) || (!isWhitelistEnabled && !isInBlacklist) || (isBlackOnlyLeader && isInBlacklist);
 
     if (Party?.leader === Player.getName() || Party.leader == null) {
-        if (floorchat != null && chatfrom === "party") {
-            switch (floorchat[1]) {
+        if (floorChat != null && chatFrom === "party") {
+            switch (floorChat[1]) {
                 case "0":
-                    if (PartyFloorSettings.PartyEntrance) {
-                        docommand = "joininstance catacombs_Entrance";
-                    }
+                    if (!PartyFloorSettings.PartyEntrance) return;
+                    doCommand = "joininstance catacombs_Entrance";
                     break;
                 case "1":
-                    if (PartyFloorSettings.PartyF1) {
-                        docommand = "joininstance catacombs_floor_one";
-                    }
+                    if (!PartyFloorSettings.PartyF1) return;
+                    doCommand = "joininstance catacombs_floor_one";
                     break;
                 case "2":
-                    if (PartyFloorSettings.PartyF2) {
-                        docommand = "joininstance catacombs_floor_two";
-                    }
+                    if (!PartyFloorSettings.PartyF2) return;
+                    doCommand = "joininstance catacombs_floor_two";
                     break;
                 case "3":
-                    if (PartyFloorSettings.PartyF3) {
-                        docommand = "joininstance catacombs_floor_three";
-                    }
+                    if (!PartyFloorSettings.PartyF3) return;
+                    doCommand = "joininstance catacombs_floor_three";
                     break;
                 case "4":
-                    if (PartyFloorSettings.PartyF4) {
-                        docommand = "joininstance catacombs_floor_four";
-                    }
+                    if (!PartyFloorSettings.PartyF4) return;
+                    doCommand = "joininstance catacombs_floor_four";
                     break;
                 case "5":
-                    if (PartyFloorSettings.PartyF5) {
-                        docommand = "joininstance catacombs_floor_five";
-                    }
+                    if (!PartyFloorSettings.PartyF5) return;
+                    doCommand = "joininstance catacombs_floor_five";
                     break;
                 case "6":
-                    if (PartyFloorSettings.PartyF6) {
-                        docommand = "joininstance catacombs_floor_six";
-                    }
+                    if (!PartyFloorSettings.PartyF6) return;
+                    doCommand = "joininstance catacombs_floor_six";
                     break;
                 case "7":
-                    if (PartyFloorSettings.PartyF7) {
-                        docommand = "joininstance catacombs_floor_seven";
-                    }
+                    if (!PartyFloorSettings.PartyF7) return;
+                    doCommand = "joininstance catacombs_floor_seven";
                     break;
             }
         }
 
-        if (masterchat != null && chatfrom === "party") {
-            switch (masterchat[1]) {
+        if (masterChat != null && chatFrom === "party") {
+            switch (masterChat[1]) {
                 case "1":
-                    if (PartyFloorSettings.PartyM1) {
-                        docommand = "joininstance master_catacombs_floor_one";
-                    }
+                    if (!PartyFloorSettings.PartyM1) return;
+                    doCommand = "joininstance master_catacombs_floor_one";
                     break;
                 case "2":
-                    if (PartyFloorSettings.PartyM2) {
-                        docommand = "joininstance master_catacombs_floor_two";
-                    }
+                    if (!PartyFloorSettings.PartyM2) return;
+                    doCommand = "joininstance master_catacombs_floor_two";
                     break;
                 case "3":
-                    if (PartyFloorSettings.PartyM3) {
-                        docommand = "joininstance master_catacombs_floor_three";
-                    }
+                    if (!PartyFloorSettings.PartyM3) return;
+                    doCommand = "joininstance master_catacombs_floor_three";
                     break;
                 case "4":
-                    if (PartyFloorSettings.PartyM4) {
-                        docommand = "joininstance master_catacombs_floor_four";
-                    }
+                    if (!PartyFloorSettings.PartyM4) return;
+                    doCommand = "joininstance master_catacombs_floor_four";
                     break;
                 case "5":
-                    if (PartyFloorSettings.PartyM5) {
-                        docommand = "joininstance master_catacombs_floor_five";
-                    }
+                    if (!PartyFloorSettings.PartyM5) return;
+                    doCommand = "joininstance master_catacombs_floor_five";
                     break;
                 case "6":
-                    if (PartyFloorSettings.PartyM6) {
-                        docommand = "joininstance master_catacombs_floor_six";
-                    }
+                    if (!PartyFloorSettings.PartyM6) return;
+                    doCommand = "joininstance master_catacombs_floor_six";
                     break;
                 case "7":
-                    if (PartyFloorSettings.PartyM7) {
-                        docommand = "joininstance master_catacombs_floor_seven";
-                    }
+                    if (!PartyFloorSettings.PartyM7) return;
+                    doCommand = "joininstance master_catacombs_floor_seven";
                     break;
             }
         }
 
-        if (tierchat != null && chatfrom === "party") {
-            switch (tierchat[1]) {
+        if (tierChat != null && chatFrom === "party") {
+            switch (tierChat[1]) {
                 case "1":
-                    if (PartyFloorSettings.PartyT1) {
-                        docommand = "joininstance kuudra_Basic";
-                    }
+                    if (!PartyFloorSettings.PartyT1) return;
+                    doCommand = "joininstance kuudra_Basic";
                     break;
                 case "2":
-                    if (PartyFloorSettings.PartyT2) {
-                        docommand = "joininstance kuudra_Hot";
-                    }
+                    if (!PartyFloorSettings.PartyT2) return;
+                    doCommand = "joininstance kuudra_Hot";
                     break;
                 case "3":
-                    if (PartyFloorSettings.PartyT3) {
-                        docommand = "joininstance kuudra_Burning";
-                    }
+                    if (!PartyFloorSettings.PartyT3) return;
+                    doCommand = "joininstance kuudra_Burning";
                     break;
                 case "4":
-                    if (PartyFloorSettings.PartyT4) {
-                        docommand = "joininstance kuudra_Fiery";
-                    }
+                    if (!PartyFloorSettings.PartyT4) return;
+                    doCommand = "joininstance kuudra_Fiery";
                     break;
                 case "5":
-                    if (PartyFloorSettings.PartyT5) {
-                        docommand = "joininstance kuudra_Infernal";
-                    }
+                    if (!PartyFloorSettings.PartyT5) return;
+                    doCommand = "joininstance kuudra_Infernal";
                     break;
             }
         }
     }
 
-    if (floorchat == null && masterchat == null && tierchat == null) {
-        switch (firstmessage) {
+    if (floorChat == null && masterChat == null && tierChat == null) {
+        switch (parts[0]) {
             case "help":
-                if (Settings.Partyhelp) {
-                    ChatLib.command("pc !help, !f(floor), !m(floor), !t(tier), !ptme, !warp, !wt, !inv (ign), !allinv, !promote (ign), !kick (ign), !dt (reason), !fps, !ping, !tps, !coords, !cf, !dice, !rng, !boop (ign), !rps (ign), !meow (ign), !cute, !time, !playtime, !runs (dungeon/kuudra), !iq");
-                }
+                if (!Settings.Partyhelp) return;
+                ChatLib.command("pc !help, !f(floor), !m(floor), !t(tier), !ptme, !warp, !wt, !inv (ign), !allinv, !promote (ign), !kick (ign), !dt (reason), !fps, !ping, !tps, !coords, !cf, !dice, !rng, !boop (ign), !rps (ign), !meow (ign), !cute, !time, !playtime, !runs (dungeon/kuudra), !iq");
                 break;
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ leader ■■■■■■■■■■■■■■■■■■■■■■■■■■■
             case "ptme":
             case "pt":
-                if (Settings.Partyptme && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        docommand = `p transfer ${strplayername}`;
-                    }
-                }
+                if (!Settings.Partyptme && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                doCommand = `p transfer ${lowerCasePlayerName}`;
                 break;
             case "warp":
             case "pwarp":
-                if (Settings.Partywarp && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        docommand = "p warp";
-                    }
-                }
+                if (!Settings.Partywarp && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                doCommand = "p warp";
                 break;
             case "warptransfer":
             case "wt":
-                if (Settings.Partywarptransfer && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-                            ChatLib.command("p warp");
-                            setTimeout(() => {
-                                ChatLib.command(`p transfer ${strplayername}`);
-                            }, 500);
-                        } else if (black.includes(strplayername)) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                        } else if (Settings.whitelisttoggle) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                        }
-                    }
+                if (!Settings.Partywarptransfer && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
+                    ChatLib.command("p warp");
+                    setTimeout(() => {
+                        ChatLib.command(`p transfer ${lowerCasePlayerName}`);
+                    }, 500);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "inv":
-            case "invite": {
-                const invign = parts[1];
-                if (chatfrom === "party") {
-                    if (Settings.Partyinv) {
-                        if (Party?.leader === Player.getName() || Party.leader == null) {
+            case "invite":
+                if (Settings.Partyinv || Settings.DMinvite) {
+                    if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                    const invIGN = parts[1];
+                    if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
+                        if (chatFrom === "party") {
                             if (Settings.Partyinvconfirm) {
-                                if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-                                    confirmwaittime = 60;
-                                    inviteConfirm(invign);
-                                    setTimeout(() => {
-                                        new TextComponent(`${prefix} Click to invite §d${invign}.`)
-                                            .setClick("run_command", "/bccconfirminvite")
-                                            .setHover("show_text", "&aClick to invite!")
-                                            .chat();
-                                    }, 50);
-                                } else if (black.includes(strplayername)) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                                } else if (Settings.whitelisttoggle) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                                }
+                                confirmWaitTime = 60;
+                                inviteConfirm(invIGN);
+                                setTimeout(() => {
+                                    new TextComponent(`${prefix} Click to invite §d${invIGN}.`)
+                                        .setClick("run_command", "/bccconfirminvite")
+                                        .setHover("show_text", "&aClick to invite!")
+                                        .chat();
+                                }, 50);
                             } else {
-                                if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-                                    ChatLib.command(`p invite ${invign}`);
-                                } else if (black.includes(strplayername)) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                                } else if (Settings.whitelisttoggle) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                                }
+                                ChatLib.command(`p invite ${invIGN}`);
+                            }
+                        } else if (chatFrom === "dm") {
+                            if (Settings.Partyinvconfirm) {
+                                inviteConfirm(lowerCasePlayerName);
+                                setTimeout(() => {
+                                    new TextComponent(`${prefix} Click to invite §d${lowerCasePlayerName}.`)
+                                        .setClick("run_command", "/bccconfirminvite")
+                                        .setHover("show_text", "&aClick to invite!")
+                                        .chat();
+                                }, 50);
+                            } else {
+                                ChatLib.command(`p invite ${lowerCasePlayerName}`);
                             }
                         }
-                    }
-                } else if (chatfrom === "dm") {
-                    if (Settings.DMinvite) {
-                        if (Party?.leader === Player.getName() || Party.leader == null) {
-                            if (Settings.Partyinvconfirm) {
-                                if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-                                    inviteConfirm(strplayername);
-                                    setTimeout(() => {
-                                        new TextComponent(`${prefix} Click to invite §d${strplayername}.`)
-                                            .setClick("run_command", "/bccconfirminvite")
-                                            .setHover("show_text", "&aClick to invite!")
-                                            .chat();
-                                    }, 50);
-                                } else if (black.includes(strplayername)) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                                } else if (Settings.whitelisttoggle) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                                }
-                            } else {
-                                if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-                                    ChatLib.command(`p invite ${strplayername}`);
-                                } else if (black.includes(strplayername)) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                                } else if (Settings.whitelisttoggle) {
-                                    ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                                }
-                            }
-                        }
+                    } else if (isInBlacklist) {
+                        ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                    } else if (isWhitelistEnabled) {
+                        ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                     }
                 }
                 break;
-            }
             case "allinv":
             case "allinvite":
-                if (Settings.Partyallinv && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        docommand = "p setting allinvite";
-                    }
-                }
+                if (!Settings.Partyallinv && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                doCommand = "p setting allinvite";
                 break;
             case "promote":
-                if (Settings.Partypromote && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        const promoteign = parts[1];
-                        docommand = `p promote ${promoteign}`;
-                    }
-                }
+                if (!Settings.Partypromote && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                doCommand = `p promote ${parts[1]}`;
                 break;
             case "kick":
             case "pkick":
-                if (Settings.Partykick && chatfrom === "party") {
-                    if (Party?.leader === Player.getName() || Party.leader == null) {
-                        const kickign = parts[1];
-                        docommand = `p kick ${kickign}`;
-                    }
-                }
+                if (!Settings.Partypromote && chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                doCommand = `p kick ${parts[1]}`;
                 break;
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ Utils ■■■■■■■■■■■■■■■■■■■■■■■■■■■
             case "dt":
             case "downtime":
-                if (Settings.Partydt && chatfrom !== "dm") {
-                    afterdowntime = true;
-                    afterready = true;
-                    if (!downtimeplayer.includes(strplayername)) {
-                        downtimeplayer.push(strplayername);
-                        if (parts.length !== 1) {
-                            let reason = parts[1];
-                            if (2 < parts.length) {
-                                for (let re = 2; re < parts.length; re++) {
-                                    reason += ` ${parts[re]}`;
-                                }
+                if (!Settings.Partydt && chatFrom === "dm") return;
+                afterDownTime = true;
+                afterReady = true;
+                if (!downTimePlayer.includes(lowerCasePlayerName)) {
+                    downTimePlayer.push(lowerCasePlayerName);
+                    if (parts.length !== 1) {
+                        let reason = parts[1];
+                        if (2 < parts.length) {
+                            for (let re = 2; re < parts.length; re++) {
+                                reason += ` ${parts[re]}`;
                             }
-                            downtimereason.push(reason);
-                        } else if (parts.length === 1) {
-                            downtimereason.push("No reason Given");
                         }
-                        ChatLib.chat(`${prefix} §aReminder set for the end of the run`);
+                        downTimeReason.push(reason);
+                    } else if (parts.length === 1) {
+                        downTimeReason.push("No reason Given");
                     }
-                    if (Settings.PartyReady) {
-                        if (!readyplayer.includes(strplayername)) {
-                            readyplayer.push(strplayername);
-                        }
+                    ChatLib.chat(`${prefix} §aReminder set for the end of the run`);
+                }
+                if (Settings.PartyReady) {
+                    if (!readyPlayer.includes(lowerCasePlayerName)) {
+                        readyPlayer.push(lowerCasePlayerName);
                     }
-                    if (somefeatureis) {
-                        ChatLib.command("somefeaturesrequeuestop", true);
-                    }
+                }
+                if (somefeaturesExists) {
+                    ChatLib.command("somefeaturesrequeuestop", true);
                 }
                 break;
             case "r":
             case "ready":
-                if (Settings.PartyReady) {
-                    if (afterready) {
-                        pready(strplayername);
-                    }
-                }
+                if (!Settings.PartyReady) return;
+                if (!afterReady) return;
+                setPlayerReady(lowerCasePlayerName);
                 break;
             case "fps":
-                if (Settings.Partyfps && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc FPS: ${Client.getFPS()}`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partyfps && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc FPS: ${Client.getFPS()}`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "ping":
-                if (Settings.Partyping && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        Client.sendPacket(new C16PacketClientStatus(C16PacketClientStatus.EnumState.REQUEST_STATS));
-                        lastPingAt = System.nanoTime();
-                        requestedPing = true;
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partyping && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    Client.sendPacket(new C16PacketClientStatus(C16PacketClientStatus.EnumState.REQUEST_STATS));
+                    lastPingAt = System.nanoTime();
+                    requestedPing = true;
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "tps":
-                if (Settings.Partytps && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        requestedTPS = true;
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partytps && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    requestedTPS = true;
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "power":
@@ -1792,35 +1667,23 @@ function RunCommands(player, message, chatfrom) {
             case "mp":
             case "magical":
             case "tuning":
-                if (Settings.PartyPower && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc MP: ${data.profile.mp} | Power: ${data.profile.power} | Tuning: ${data.profile.tuning} | Enrich: ${data.profile.enrichamount}, ${data.profile.enrich}`)
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.PartyPower && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc MP: ${data.profile.mp} | Power: ${data.profile.power} | Tuning: ${data.profile.tuning} | Enrich: ${data.profile.enrichamount}, ${data.profile.enrich}`)
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "pet":
-                if (Settings.PartyPet && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc Pet: ${data.profile.pet}`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.PartyPet && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc Pet: ${data.profile.pet}`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "coords":
@@ -1828,51 +1691,19 @@ function RunCommands(player, message, chatfrom) {
             case "whereareyou":
             case "xyz":
             case "waypoint":
-                if (chatfrom === "party") {
-                    if (Settings.PartyCoords) {
-                        if (
-                            (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                            (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                            (Settings.blackonlyleader && black.includes(strplayername)) ||
-                            (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                        ) {
-                            ChatLib.command(`pc x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
-                        } else if (black.includes(strplayername)) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                        } else if (Settings.whitelisttoggle) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                        }
+                if (!Settings.PartyCoords && !Settings.DMCoords && !Settings.allchattoggle) return;
+                if (shouldDoCommand) {
+                    if (chatFrom === "party") {
+                        ChatLib.command(`pc x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
+                    } else if (chatFrom === "dm") {
+                        ChatLib.command(`r x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
+                    } else if (chatFrom === "all") {
+                        ChatLib.command(`ac x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
                     }
-                } else if (chatfrom === "dm") {
-                    if (Settings.DMCoords) {
-                        if (
-                            (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                            (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                            (Settings.blackonlyleader && black.includes(strplayername)) ||
-                            (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                        ) {
-                            ChatLib.command(`r x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
-                        } else if (black.includes(strplayername)) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                        } else if (Settings.whitelisttoggle) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                        }
-                    }
-                } else if (chatfrom === "all") {
-                    if (Settings.allchattoggle) {
-                        if (
-                            (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                            (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                            (Settings.blackonlyleader && black.includes(strplayername)) ||
-                            (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                        ) {
-                            ChatLib.command(`ac x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
-                        } else if (black.includes(strplayername)) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                        } else if (Settings.whitelisttoggle) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                        }
-                    }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ Party ■■■■■■■■■■■■■■■■■■■■■■■■■■■
@@ -1880,450 +1711,373 @@ function RunCommands(player, message, chatfrom) {
             case "coin":
             case "coinflip":
             case "flip":
-                if (Settings.Partycf && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc ${strplayername} rolled ${Math.floor(Math.random() * 2) === 0 ? "Heads" : "Tails"}`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partycf && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc ${lowerCasePlayerName} rolled ${Math.floor(Math.random() * 2) === 0 ? "Heads" : "Tails"}`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "dice":
             case "roll":
-                if (Settings.Partydice && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc ${strplayername} rolled a ${1 + Math.floor(Math.random() * 6)}.`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partydice && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc ${lowerCasePlayerName} rolled a ${1 + Math.floor(Math.random() * 6)}.`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "rng":
-                if (Settings.Partyrng && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const rngign = parts[1];
-                        if (rngign != null && rngign !== "sontaku") {
-                            ChatLib.command(`pc ${rngign} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
-                        } else if (rngign === "sontaku") {
-                            ChatLib.command(`pc ${strplayername} have 100% RNG Chance.`);
-                        } else {
-                            ChatLib.command(`pc ${strplayername} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (!Settings.Partyrng && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    const rngign = parts[1];
+                    if (rngign != null && rngign !== "sontaku") {
+                        ChatLib.command(`pc ${rngign} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
+                    } else if (rngign === "sontaku") {
+                        ChatLib.command(`pc ${lowerCasePlayerName} have 100% RNG Chance.`);
+                    } else {
+                        ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "rrng":
             case "realrng":
-                if (Settings.PartyRealrng && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const rngtype = parts[1];
-                        switch (rngtype) {
-                            case "zombie":
-                            case "revenant":
-                            case "zsl":
-                                ChatLib.command(`pc ZombieRNG: ${data.RNG.Slayer.Zombie[0]}, ${data.RNG.Slayer.Zombie[1]}%`);
-                                break;
-                            case "spider":
-                            case "tarantula":
-                                ChatLib.command(`pc SpiderRNG: ${data.RNG.Slayer.Spider[0]}, ${data.RNG.Slayer.Spider[1]}%`);
-                                break;
-                            case "packmaster":
-                            case "pack":
-                            case "wolf":
-                            case "sven":
-                                ChatLib.command(`pc WolfRNG: ${data.RNG.Slayer.Wolf[0]}, ${data.RNG.Slayer.Wolf[1]}%`);
-                                break;
-                            case "enderman":
-                            case "end":
-                            case "void":
-                            case "voidgloom":
-                            case "seraph":
-                                ChatLib.command(`pc EndermanRNG: ${data.RNG.Slayer.Enderman[0]}, ${data.RNG.Slayer.Enderman[1]}%`);
-                                break;
-                            case "vampire":
-                            case "vamp":
-                            case "rift":
-                                ChatLib.command(`pc VampireRNG: ${data.RNG.Slayer.Vampire[0]}, ${data.RNG.Slayer.Vampire[1]}%`);
-                                break;
-                            case "blaze":
-                            case "inferno":
-                            case "demonlord":
-                                ChatLib.command(`pc BlazeRNG: ${data.RNG.Slayer.Blaze[0]}, ${data.RNG.Slayer.Blaze[1]}%`);
-                                break;
-                            case "f1":
-                                ChatLib.command(`pc F1RNG: ${data.RNG.Catacombs.Normal.F1[0]}, ${data.RNG.Catacombs.Normal.F1[1]}%`);
-                                break;
-                            case "f2":
-                                ChatLib.command(`pc F2RNG: ${data.RNG.Catacombs.Normal.F2[0]}, ${data.RNG.Catacombs.Normal.F2[1]}%`);
-                                break;
-                            case "f3":
-                                ChatLib.command(`pc F3RNG: ${data.RNG.Catacombs.Normal.F3[0]}, ${data.RNG.Catacombs.Normal.F3[1]}%`);
-                                break;
-                            case "f4":
-                                ChatLib.command(`pc F4RNG: ${data.RNG.Catacombs.Normal.F4[0]}, ${data.RNG.Catacombs.Normal.F4[1]}%`);
-                                break;
-                            case "f5":
-                                ChatLib.command(`pc F5RNG: ${data.RNG.Catacombs.Normal.F5[0]}, ${data.RNG.Catacombs.Normal.F5[1]}%`);
-                                break;
-                            case "f6":
-                                ChatLib.command(`pc F6RNG: ${data.RNG.Catacombs.Normal.F6[0]}, ${data.RNG.Catacombs.Normal.F6[1]}%`);
-                                break;
-                            case "f7":
-                                ChatLib.command(`pc F7RNG: ${data.RNG.Catacombs.Normal.F7[0]}, ${data.RNG.Catacombs.Normal.F7[1]}%`);
-                                break;
-                            case "m1":
-                                ChatLib.command(`pc M1RNG: ${data.RNG.Catacombs.Master.M1[0]}, ${data.RNG.Catacombs.Master.M1[1]}%`);
-                                break;
-                            case "m2":
-                                ChatLib.command(`pc M2RNG: ${data.RNG.Catacombs.Master.M2[0]}, ${data.RNG.Catacombs.Master.M2[1]}%`);
-                                break;
-                            case "m3":
-                                ChatLib.command(`pc M3RNG: ${data.RNG.Catacombs.Master.M3[0]}, ${data.RNG.Catacombs.Master.M3[1]}%`);
-                                break;
-                            case "m4":
-                                ChatLib.command(`pc M4RNG: ${data.RNG.Catacombs.Master.M4[0]}, ${data.RNG.Catacombs.Master.M4[1]}%`);
-                                break;
-                            case "m5":
-                                ChatLib.command(`pc M5RNG: ${data.RNG.Catacombs.Master.M5[0]}, ${data.RNG.Catacombs.Master.M5[1]}%`);
-                                break;
-                            case "m6":
-                                ChatLib.command(`pc M6RNG: ${data.RNG.Catacombs.Master.M6[0]}, ${data.RNG.Catacombs.Master.M6[1]}%`);
-                                break;
-                            case "m7":
-                                ChatLib.command(`pc M7RNG: ${data.RNG.Catacombs.Master.M7[0]}, ${data.RNG.Catacombs.Master.M7[1]}%`);
-                                break;
-                            case "nucleus":
-                            case "crystal":
-                                ChatLib.command(`pc NucleusRNG: ${data.RNG.Nucleus[0]}, ${data.RNG.Nucleus[1]}%`);
-                                break;
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (!Settings.PartyRealrng && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    const rngtype = parts[1];
+                    switch (rngtype) {
+                        case "zombie":
+                        case "revenant":
+                        case "zsl":
+                            ChatLib.command(`pc ZombieRNG: ${data.RNG.Slayer.Zombie[0]}, ${data.RNG.Slayer.Zombie[1]}%`);
+                            break;
+                        case "spider":
+                        case "tarantula":
+                            ChatLib.command(`pc SpiderRNG: ${data.RNG.Slayer.Spider[0]}, ${data.RNG.Slayer.Spider[1]}%`);
+                            break;
+                        case "packmaster":
+                        case "pack":
+                        case "wolf":
+                        case "sven":
+                            ChatLib.command(`pc WolfRNG: ${data.RNG.Slayer.Wolf[0]}, ${data.RNG.Slayer.Wolf[1]}%`);
+                            break;
+                        case "enderman":
+                        case "end":
+                        case "void":
+                        case "voidgloom":
+                        case "seraph":
+                            ChatLib.command(`pc EndermanRNG: ${data.RNG.Slayer.Enderman[0]}, ${data.RNG.Slayer.Enderman[1]}%`);
+                            break;
+                        case "vampire":
+                        case "vamp":
+                        case "rift":
+                            ChatLib.command(`pc VampireRNG: ${data.RNG.Slayer.Vampire[0]}, ${data.RNG.Slayer.Vampire[1]}%`);
+                            break;
+                        case "blaze":
+                        case "inferno":
+                        case "demonlord":
+                            ChatLib.command(`pc BlazeRNG: ${data.RNG.Slayer.Blaze[0]}, ${data.RNG.Slayer.Blaze[1]}%`);
+                            break;
+                        case "f1":
+                            ChatLib.command(`pc F1RNG: ${data.RNG.Catacombs.Normal.F1[0]}, ${data.RNG.Catacombs.Normal.F1[1]}%`);
+                            break;
+                        case "f2":
+                            ChatLib.command(`pc F2RNG: ${data.RNG.Catacombs.Normal.F2[0]}, ${data.RNG.Catacombs.Normal.F2[1]}%`);
+                            break;
+                        case "f3":
+                            ChatLib.command(`pc F3RNG: ${data.RNG.Catacombs.Normal.F3[0]}, ${data.RNG.Catacombs.Normal.F3[1]}%`);
+                            break;
+                        case "f4":
+                            ChatLib.command(`pc F4RNG: ${data.RNG.Catacombs.Normal.F4[0]}, ${data.RNG.Catacombs.Normal.F4[1]}%`);
+                            break;
+                        case "f5":
+                            ChatLib.command(`pc F5RNG: ${data.RNG.Catacombs.Normal.F5[0]}, ${data.RNG.Catacombs.Normal.F5[1]}%`);
+                            break;
+                        case "f6":
+                            ChatLib.command(`pc F6RNG: ${data.RNG.Catacombs.Normal.F6[0]}, ${data.RNG.Catacombs.Normal.F6[1]}%`);
+                            break;
+                        case "f7":
+                            ChatLib.command(`pc F7RNG: ${data.RNG.Catacombs.Normal.F7[0]}, ${data.RNG.Catacombs.Normal.F7[1]}%`);
+                            break;
+                        case "m1":
+                            ChatLib.command(`pc M1RNG: ${data.RNG.Catacombs.Master.M1[0]}, ${data.RNG.Catacombs.Master.M1[1]}%`);
+                            break;
+                        case "m2":
+                            ChatLib.command(`pc M2RNG: ${data.RNG.Catacombs.Master.M2[0]}, ${data.RNG.Catacombs.Master.M2[1]}%`);
+                            break;
+                        case "m3":
+                            ChatLib.command(`pc M3RNG: ${data.RNG.Catacombs.Master.M3[0]}, ${data.RNG.Catacombs.Master.M3[1]}%`);
+                            break;
+                        case "m4":
+                            ChatLib.command(`pc M4RNG: ${data.RNG.Catacombs.Master.M4[0]}, ${data.RNG.Catacombs.Master.M4[1]}%`);
+                            break;
+                        case "m5":
+                            ChatLib.command(`pc M5RNG: ${data.RNG.Catacombs.Master.M5[0]}, ${data.RNG.Catacombs.Master.M5[1]}%`);
+                            break;
+                        case "m6":
+                            ChatLib.command(`pc M6RNG: ${data.RNG.Catacombs.Master.M6[0]}, ${data.RNG.Catacombs.Master.M6[1]}%`);
+                            break;
+                        case "m7":
+                            ChatLib.command(`pc M7RNG: ${data.RNG.Catacombs.Master.M7[0]}, ${data.RNG.Catacombs.Master.M7[1]}%`);
+                            break;
+                        case "nucleus":
+                        case "crystal":
+                            ChatLib.command(`pc NucleusRNG: ${data.RNG.Nucleus[0]}, ${data.RNG.Nucleus[1]}%`);
+                            break;
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "boop": {
-                const boopign = parts[1];
-                if (boopign !== strplayername) {
-                    if (Settings.Partyboop && chatfrom !== "dm") {
-                        if (
-                            (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                            (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                            (Settings.blackonlyleader && black.includes(strplayername)) ||
-                            (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                        ) {
-                            if (boopign == null) {
-                                if (strplayername !== lowgetname) {
-                                    ChatLib.command(`boop ${strplayername}`);
-                                }
-                            } else {
-                                ChatLib.command(`boop ${boopign}`);
-                            }
-                        } else if (black.includes(strplayername)) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                        } else if (Settings.whitelisttoggle) {
-                            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (Settings.Partyboop && chatFrom !== "dm") {
+                    const boopign = parts[1];
+                    if (boopign !== lowerCasePlayerName) return;
+                    if (shouldDoCommand) {
+                        if (boopign == null) {
+                            if (lowerCasePlayerName === lowerCaseGetName) return;
+                            ChatLib.command(`boop ${lowerCasePlayerName}`);
+                        } else {
+                            ChatLib.command(`boop ${boopign}`);
                         }
+                    } else if (isInBlacklist) {
+                        ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                    } else if (isWhitelistEnabled) {
+                        ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                     }
                 }
                 break;
             }
             case "rps":
-                if (Settings.Partyrps && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const enemyign = parts[1];
-                        const whatchoice = Math.floor(Math.random() * 3);
-                        if (strplayername === lowgetname) {
-                            // me to enemy
-                            tryget = 50;
-                            rpsis = true;
-                            checkenemy();
-                        } else if (enemyign === lowgetname) {
-                            // enemy from me
-                            ichoose = rps[whatchoice];
-                            rpsis = true;
-                            fromrps = true;
-                            ChatLib.command(`pc I choose ${ichoose}`);
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (!Settings.Partyrps && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    enemyIGN = parts[1];
+                    const whatchoice = Math.floor(Math.random() * 3);
+                    if (lowerCasePlayerName === lowerCaseGetName) {// me to enemy
+                        responseWaitTime = 60;
+                        isRPSActive = true;
+                        checkEnemy();
+                    } else if (enemyIGN === lowerCaseGetName) {// enemy from me
+                        playerChoose = RPS[whatchoice];
+                        isRPSActive = true;
+                        fromrps = true;
+                        ChatLib.command(`pc I choose ${playerChoose}`);
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "meow":
-                if (Settings.Partymeow && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const meowign = parts[1];
-                        if (meowign !== lowgetname) {
-                            ChatLib.command(`tell ${meowign} meow`);
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (!Settings.Partymeow && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    const meowign = parts[1];
+                    if (meowign !== lowerCaseGetName) {
+                        ChatLib.command(`tell ${meowign} meow`);
                     }
-                    break;
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "cute":
-                if (Settings.Partycute && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc ${strplayername} have ${Math.floor(Math.random() * 100) + 1}% Cute.`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (Settings.Partycute && chatFrom !== "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% Cute.`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "nowtime":
             case "timezone":
             case "time":
-                if (Settings.Partynowtime && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        ChatLib.command(`pc ${new Date().toLocaleTimeString()}`);
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
-                    }
+                if (!Settings.Partynowtime && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    ChatLib.command(`pc ${new Date().toLocaleTimeString()}`);
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "playtime":
-                if (Settings.Partyplaytime && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const timetype = parts[1];
-                        switch (timetype) {
-                            case "today":
-                            case null:
-                            case undefined:
-                            case "day":
-                                ptoday = (Date.now() - data.jointime) / 1000;
-                                ptoday = ptoday.toFixed();
-                                playtimetoday = formatSeconds(ptoday);
-                                ChatLib.command(`pc Today Playtime: ${playtimetoday}`);
-                                break;
-                            case "all":
-                            case "alltime":
-                                ChatLib.command(`pc Alltime Playtime: ${data.allplaytime}`);
-                                break;
-                            case "crim":
-                            case "crimson":
-                            case "isle":
-                                ChatLib.command(`pc Crimson Playtime: ${data.playtimes.Crimson}h`)
-                                break;
-                            case "crystal":
-                            case "hollow":
-                                ChatLib.command(`pc Crystal Playtime: ${data.playtimes.Crystal}h`)
-                                break;
-                            case "dark":
-                            case "da":
-                            case "auction":
-                                ChatLib.command(`pc DA Playtime: ${data.playtimes.Dark}h`)
-                                break;
-                            case "deep":
-                            case "caverns":
-                                ChatLib.command(`pc Deep Caverns Playtime: ${data.playtimes.Deep}h`)
-                                break;
-                            case "dungeon":
-                            case "dungeons":
-                                ChatLib.command(`pc Dungeon Playtime: ${data.playtimes.Dungeon}h`)
-                                break;
-                            case "dhub":
-                            case "dh":
-                            case "dungeonhub":
-                                ChatLib.command(`pc Dhub Playtime: ${data.playtimes.Crystal}h`)
-                                break;
-                            case "dwarven":
-                            case "mines":
-                                ChatLib.command(`pc Dwarven Playtime: ${data.playtimes.Dwarven}h`)
-                                break;
-                            case "garden":
-                                ChatLib.command(`pc Gerden Playtime: ${data.playtimes.Garden}h`)
-                                break;
-                            case "gold":
-                                ChatLib.command(`pc Gold Mine Playtime: ${data.playtimes.Gold}h`)
-                                break;
-                            case "hub":
-                                ChatLib.command(`pc Hub Playtime: ${data.playtimes.Hub}h`)
-                                break;
-                            case "jerry":
-                            case "workshop":
-                                ChatLib.command(`pc Jerry Playtime: ${data.playtimes.Jerry}h`)
-                                break;
-                            case "kuudra":
-                            case "drakuu":
-                                ChatLib.command(`pc Kuudra Playtime: ${data.playtimes.Kuudra}h`)
-                                break;
-                            case "shaft":
-                            case "mineshaft":
-                                ChatLib.command(`pc Mineshaft Playtime: ${data.playtimes.Shaft}h`)
-                                break;
-                            case "island":
-                            case "is":
-                            case "private":
-                                ChatLib.command(`pc Island Playtime: ${data.playtimes.Island}h`)
-                                break;
-                            case "spider":
-                            case "den":
-                                ChatLib.command(`pc Spider Playtime: ${data.playtimes.Spider}h`)
-                                break;
-                            case "end":
-                                ChatLib.command(`pc The End Playtime: ${data.playtimes.End}h`)
-                                break;
-                            case "farm":
-                            case "barn":
-                            case "mushroom":
-                                ChatLib.command(`pc Barn Playtime: ${data.playtimes.Farm}h`)
-                                break;
-                            case "rift":
-                                ChatLib.command(`pc Rift Playtime: ${data.playtimes.Rift}h`)
-                                break;
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (!Settings.Partyplaytime && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    const timetype = parts[1];
+                    switch (timetype) {
+                        case "today":
+                        case null:
+                        case undefined:
+                        case "day":
+                            ptoday = ((Date.now() - data.jointime) / 1000).toFixed();
+                            playtimetoday = formatSeconds(ptoday);
+                            ChatLib.command(`pc Today Playtime: ${playtimetoday}`);
+                            break;
+                        case "all":
+                        case "alltime":
+                            ChatLib.command(`pc Alltime Playtime: ${data.allplaytime}`);
+                            break;
+                        case "crim":
+                        case "crimson":
+                        case "isle":
+                            ChatLib.command(`pc Crimson Playtime: ${data.playtimes.Crimson}h`)
+                            break;
+                        case "crystal":
+                        case "hollow":
+                            ChatLib.command(`pc Crystal Playtime: ${data.playtimes.Crystal}h`)
+                            break;
+                        case "dark":
+                        case "da":
+                        case "auction":
+                            ChatLib.command(`pc DA Playtime: ${data.playtimes.Dark}h`)
+                            break;
+                        case "deep":
+                        case "caverns":
+                            ChatLib.command(`pc Deep Caverns Playtime: ${data.playtimes.Deep}h`)
+                            break;
+                        case "dungeon":
+                        case "dungeons":
+                            ChatLib.command(`pc Dungeon Playtime: ${data.playtimes.Dungeon}h`)
+                            break;
+                        case "dhub":
+                        case "dh":
+                        case "dungeonhub":
+                            ChatLib.command(`pc Dhub Playtime: ${data.playtimes.Crystal}h`)
+                            break;
+                        case "dwarven":
+                        case "mines":
+                            ChatLib.command(`pc Dwarven Playtime: ${data.playtimes.Dwarven}h`)
+                            break;
+                        case "garden":
+                            ChatLib.command(`pc Gerden Playtime: ${data.playtimes.Garden}h`)
+                            break;
+                        case "gold":
+                            ChatLib.command(`pc Gold Mine Playtime: ${data.playtimes.Gold}h`)
+                            break;
+                        case "hub":
+                            ChatLib.command(`pc Hub Playtime: ${data.playtimes.Hub}h`)
+                            break;
+                        case "jerry":
+                        case "workshop":
+                            ChatLib.command(`pc Jerry Playtime: ${data.playtimes.Jerry}h`)
+                            break;
+                        case "kuudra":
+                        case "drakuu":
+                            ChatLib.command(`pc Kuudra Playtime: ${data.playtimes.Kuudra}h`)
+                            break;
+                        case "shaft":
+                        case "mineshaft":
+                            ChatLib.command(`pc Mineshaft Playtime: ${data.playtimes.Shaft}h`)
+                            break;
+                        case "island":
+                        case "is":
+                        case "private":
+                            ChatLib.command(`pc Island Playtime: ${data.playtimes.Island}h`)
+                            break;
+                        case "spider":
+                        case "den":
+                            ChatLib.command(`pc Spider Playtime: ${data.playtimes.Spider}h`)
+                            break;
+                        case "end":
+                            ChatLib.command(`pc The End Playtime: ${data.playtimes.End}h`)
+                            break;
+                        case "farm":
+                        case "barn":
+                        case "mushroom":
+                            ChatLib.command(`pc Barn Playtime: ${data.playtimes.Farm}h`)
+                            break;
+                        case "rift":
+                            ChatLib.command(`pc Rift Playtime: ${data.playtimes.Rift}h`)
+                            break;
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "runs":
-                if (Settings.Partyruns && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const runtype = parts[1];
-                        if (runtype === "kuudra") {
-                            ChatLib.command(`pc Today Kuudra Runs: ${kuudraruns}`);
-                        } else if (runtype === "dungeon" || runtype === "dungeons" || runtype === "catacombs" || runtype == null || runtype === undefined) {
-                            ChatLib.command(`pc Today Dungeon Runs: ${dungoenruns}`);
-                        }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                if (Settings.Partyruns && chatFrom !== "dm") return;
+                if (shouldDoCommand) {
+                    const runtype = parts[1];
+                    if (runtype === "kuudra") {
+                        ChatLib.command(`pc Today Kuudra Runs: ${sessionKuudraRuns}`);
+                    } else if (runtype === "dungeon" || runtype === "dungeons" || runtype === "catacombs" || runtype == null || runtype === undefined) {
+                        ChatLib.command(`pc Today Dungeon Runs: ${sessionDungoenRuns}`);
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
             case "iq":
             case "iqtest":
-                if (Settings.Partyiq && chatfrom !== "dm") {
-                    if (
-                        (Settings.whitelisttoggle && white.includes(strplayername)) ||
-                        (!Settings.whitelisttoggle && !black.includes(strplayername)) ||
-                        (Settings.blackonlyleader && black.includes(strplayername)) ||
-                        (Settings.whitelisttoggle && Settings.whiteonlyleader && !white.includes(strplayername))
-                    ) {
-                        const iqign = parts[1];
-                        const iqis = Math.floor(Math.random() * 302);
-                        if (iqign != null && iqign !== "sontaku") {
-                            if (iqis === 0) {
-                                ChatLib.command(`pc OMG!! ${iqign} have 5000 IQ!! NO WAY!!`);
-                            } else if (iqis >= 1 && iqis <= 85) {
-                                ChatLib.command(`pc ${iqign} have ${iqis} IQ! Study more!`);
-                            } else if (iqis >= 86 && iqis <= 110) {
-                                ChatLib.command(`pc ${iqign} have ${iqis} IQ! Not bad!`);
-                            } else if (iqis >= 111 && iqis <= 200) {
-                                ChatLib.command(`pc ${iqign} have ${iqis} IQ! You have good brain! `);
-                            } else if (iqis >= 201 && iqis <= 300) {
-                                ChatLib.command(`pc WOW! ${iqign} have ${iqis} IQ! :Galaxy Brain:`);
-                            } else if (iqis === 301) {
-                                ChatLib.command(`pc ${iqign} have 334 IQ! nandeya!`);
-                            }
-                        } else if (iqign === "sontaku") {
-                            ChatLib.command(`pc OMG!! ${strplayername} have 5000 IQ!! NO WAY!!`);
-                        } else {
-                            if (iqis === 0) {
-                                ChatLib.command(`pc OMG!! ${strplayername} have 5000 IQ!! NO WAY!!`);
-                            } else if (iqis >= 1 && iqis <= 85) {
-                                ChatLib.command(`pc ${strplayername} have ${iqis} IQ! Study more!`);
-                            } else if (iqis >= 86 && iqis <= 110) {
-                                ChatLib.command(`pc ${strplayername} have ${iqis} IQ! Not bad!`);
-                            } else if (iqis >= 111 && iqis <= 200) {
-                                ChatLib.command(`pc ${strplayername} have ${iqis} IQ! You have good brain! `);
-                            } else if (iqis >= 201 && iqis <= 300) {
-                                ChatLib.command(`pc WOW! ${strplayername} have ${iqis} IQ! :Galaxy Brain:`);
-                            } else if (iqis === 301) {
-                                ChatLib.command(`pc ${strplayername} have 334 IQ! nandeya!`);
-                            }
+                if (!Settings.Partyiq && chatFrom === "dm") return;
+                if (shouldDoCommand) {
+                    const iqIGN = parts[1];
+                    const iqIs = Math.floor(Math.random() * 302);
+                    if (iqIGN != null && iqIGN !== "sontaku") {
+                        if (iqIs === 0) {
+                            ChatLib.command(`pc OMG!! ${iqIGN} have 5000 IQ!! NO WAY!!`);
+                        } else if (iqIs >= 1 && iqIs <= 85) {
+                            ChatLib.command(`pc ${iqIGN} have ${iqIs} IQ! Study more!`);
+                        } else if (iqIs >= 86 && iqIs <= 110) {
+                            ChatLib.command(`pc ${iqIGN} have ${iqIs} IQ! Not bad!`);
+                        } else if (iqIs >= 111 && iqIs <= 200) {
+                            ChatLib.command(`pc ${iqIGN} have ${iqIs} IQ! You have good brain! `);
+                        } else if (iqIs >= 201 && iqIs <= 300) {
+                            ChatLib.command(`pc WOW! ${iqIGN} have ${iqIs} IQ! :Galaxy Brain:`);
+                        } else if (iqIs === 301) {
+                            ChatLib.command(`pc ${iqIGN} have 334 IQ! nandeya!`);
                         }
-                    } else if (black.includes(strplayername)) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-                    } else if (Settings.whitelisttoggle) {
-                        ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+                    } else if (iqIGN === "sontaku") {
+                        ChatLib.command(`pc OMG!! ${lowerCasePlayerName} have 5000 IQ!! NO WAY!!`);
+                    } else {
+                        if (iqIs === 0) {
+                            ChatLib.command(`pc OMG!! ${lowerCasePlayerName} have 5000 IQ!! NO WAY!!`);
+                        } else if (iqIs >= 1 && iqIs <= 85) {
+                            ChatLib.command(`pc ${lowerCasePlayerName} have ${iqIs} IQ! Study more!`);
+                        } else if (iqIs >= 86 && iqIs <= 110) {
+                            ChatLib.command(`pc ${lowerCasePlayerName} have ${iqIs} IQ! Not bad!`);
+                        } else if (iqIs >= 111 && iqIs <= 200) {
+                            ChatLib.command(`pc ${lowerCasePlayerName} have ${iqIs} IQ! You have good brain! `);
+                        } else if (iqIs >= 201 && iqIs <= 300) {
+                            ChatLib.command(`pc WOW! ${lowerCasePlayerName} have ${iqIs} IQ! :Galaxy Brain:`);
+                        } else if (iqIs === 301) {
+                            ChatLib.command(`pc ${lowerCasePlayerName} have 334 IQ! nandeya!`);
+                        }
                     }
+                } else if (isInBlacklist) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+                } else if (isWhitelistEnabled) {
+                    ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
         }
     }
 
-    if (docommand != null) {
-        if ((Settings.whitelisttoggle && white.includes(strplayername)) || (!Settings.whitelisttoggle && !black.includes(strplayername))) {
-            ChatLib.command(docommand);
-        } else if (black.includes(strplayername)) {
-            ChatLib.chat(`${prefix} §f${strplayername} §cis in blacklist`);
-        } else if (Settings.whitelisttoggle) {
-            ChatLib.chat(`${prefix} §f${strplayername} §cis not in whitelist`);
+    if (doCommand != null) {
+        if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
+            ChatLib.command(doCommand);
+        } else if (isInBlacklist) {
+            ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
+        } else if (isWhitelistEnabled) {
+            ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
         }
     }
 }

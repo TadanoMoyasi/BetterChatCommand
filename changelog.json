@@ -1,3 +1,4 @@
 [
-    "-Add !realrng"
+    "-Added !rrng. There is no automatic percentage increase yet.",
+    "-Added autoupdate. You can update from the next version with just a click of a chat."
 ]

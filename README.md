@@ -3,7 +3,7 @@
     </br>
     <img src="https://img.shields.io/github/v/release/TadanoMoyasi/BetterChatCommand?style=for-the-badge" alt="GitHub release (latest by date)">
     <a href="https://github.com/TadanoMoyasi/BetterChatCommand/releases/latest">
-        <img src="https://img.shields.io/github/downloads/TadanoMoyasi/BetterChatCommand/latest/total?style=for-the-badge&label=downloads" alt="Downloads">
+        <img src="https://img.shields.io/github/downloads/TadanoMoyasi/BetterChatCommand/total?style=for-the-badge&label=download&color=25ae90" alt="Downloads">
     </a>
     <a href="https://discord.gg/TZB4X9h8wq">
         <img src="https://img.shields.io/discord/1211051268814934066?style=for-the-badge&logo=discord&logoColor=white&label=Discord&color=7289d7" alt="Discord Server">

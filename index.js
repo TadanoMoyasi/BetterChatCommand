@@ -1203,7 +1203,6 @@ register("tick", () => {
         if (inv.getName().includes("Slayer RNG Meter")) {
             const slayertype = ["Zombie", "Spider", "Wolf", "", "Enderman", "Vampire", "Blaze"];
             let slayerscanned = 0;
-            const slayer = slayertype[slayerscanned];
             items.slice(19, 26).forEach(item => {
                 const lore = item?.getLore();
                 if (!lore) {
@@ -1211,6 +1210,7 @@ register("tick", () => {
                     return;
                 }
                 let scanline = 0;
+                const slayer = slayertype[slayerscanned];
                 for (let line of lore) {
                     scanline--;
                     line = ChatLib.removeFormatting(line);
@@ -1830,6 +1830,7 @@ function runCommand(player, message, chatFrom) {
                             break;
                         case "nucleus":
                         case "crystal":
+                        case "cn":
                             ChatLib.command(`pc NucleusRNG: ${data.RNG.Nucleus[0]}, ${data.RNG.Nucleus[1]}%`);
                             break;
                     }

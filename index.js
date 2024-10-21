@@ -4,6 +4,9 @@ import Party from "../BloomCore/Party";
 import PogObject from "../PogData";
 import request from "requestV2/index";
 
+
+//It's a pain to separate everything into files now.
+//initial
 const metadata = JSON.parse(FileLib.read("BetterChatCommand", "metadata.json"));
 const version = metadata.version;
 const prefix = "§8[§aBCC§8]§r";
@@ -25,9 +28,12 @@ const PrintStream = Java.type("java.io.PrintStream");
 const URL = Java.type("java.net.URL");
 const File = Java.type("java.io.File");
 let lastTimeUsed = 0;
+//dt
 let afterDownTime = false;
 let downTimePlayer = [];
 let downTimeReason = [];
+let saidDt = false;
+//rps
 const RPS = ["Rock", "Paper", "Scissors"];
 let enemyIGN = null;
 let isRPSActive = false;
@@ -36,20 +42,25 @@ let playerChoose = null;
 let drawCount = 0;
 let enemyHaveBCC = false;
 let responseWaitTime = 0;
-let rpsyou = false; //nanimo tukattenai
+let RPSStarter = false;
+//ready
 let afterReady = false;
 let readyPlayer = [];
 let stopReady = false;
 let joinFloor = null;
+//runs
 let sessionKuudraRuns = 0;
 let sessionDungoenRuns = 0;
+//inviteConfirm
 let confirmWaitTime = 60;
 let confirm = false;
 let somefeaturesExists = false;
+//profiles
 let scanned = false;
 const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purple", "Red", "Yellow", "Flushed", "Happy", "Cheeky", "Cool", "Cute", "Derp", "Grumpy", "Regular", "Shock", "Tears"];
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
+//autoUpdate
 let canUpdate = false;
 let updating = false;
 
@@ -57,6 +68,7 @@ const data = new PogObject(
     "BetterChatCommand",
     {
         firstTime: false,
+        lastversion: "",
         blacklist: {
             name: [],
             uuid: []
@@ -74,6 +86,11 @@ const data = new PogObject(
             pet: "nodata",
         },
         playtimes: {
+            mayor: {
+                lastmayor: "",
+                jointime: 1,
+                playtime: 1,
+            },
             all: "nodata",
             Crimson: "nodata", // Crimson Isle
             Crystal: "nodata", // Crystal Hollows
@@ -189,7 +206,6 @@ const data = new PogObject(
                 0
             ]
         },
-        lastversion: "",
         jointime: 1,
         lasttime: 1,
         todaykuudra: 0,
@@ -200,6 +216,7 @@ const data = new PogObject(
 
 const check = register("tick", () => {
     check.unregister();
+    let first = false;
     if (!data.firstTime) {
         ChatLib.chat("§b§l§m--------------------------------------------");
         ChatLib.chat(ChatLib.getCenteredText(`§3§lBetterChatCommand ${version}`));
@@ -208,6 +225,7 @@ const check = register("tick", () => {
         ChatLib.chat(ChatLib.getCenteredText("§cIf you find any bugs, please contact me.(tadanomoyasi)"));
         ChatLib.chat("§b§l§m--------------------------------------------");
         data.firstTime = true;
+        first = true;
     }
     //check somefeatures for dt requeue
     const fileExists = FileLib.exists("somefeatures", "features/autorequeue.js");
@@ -216,20 +234,13 @@ const check = register("tick", () => {
     } else {
         somefeaturesExists = false;
     }
-    if (Settings.debugmode) {
-        console.log("----BCC----");
-        console.log(`version: ${version}.1`);
-        console.log(`jointime: ${data.jointime}`);
-        console.log(`lasttime: ${data.lasttime}`);
-        console.log(`nowtime: ${Date.now()}`);
-        console.log(`somefeature is ${somefeaturesExists}`);
-    }
+    data.playtimes.mayor.jointime = Date.now();
     if (data.jointime === 1 || data.lasttime === 1) {
         data.jointime = Date.now();
         data.lasttime = Date.now();
         data.save();
     }
-    if (Date.now() - data.lasttime > 3600000) {
+    if (Date.now() - data.lasttime > 18000000) {
         data.jointime = Date.now();
         sessionKuudraRuns = 0;
         sessionDungoenRuns = 0;
@@ -241,7 +252,7 @@ const check = register("tick", () => {
         sessionDungoenRuns = data.todaydungeon;
         sessionKuudraRuns = data.todaykuudra;
     }
-    if (version !== data.lastversion && data.firstTime) {
+    if (version !== data.lastversion && !first) {
         data.lastversion = version;
         data.save();
         const changelog = JSON.parse(FileLib.read("BetterChatCommand", "changelog.json"));
@@ -260,17 +271,27 @@ const check = register("tick", () => {
         url: "https://api.github.com/repos/TadanoMoyasi/BetterChatCommand/releases/latest",
         json: true
     }).then((response) => {
-        const bccletestver = response.name;
-        if (version !== bccletestver) {
+        const BCCLetestVersion = response.name;
+        if (version !== BCCLetestVersion) {
             canUpdate = true;
             new TextComponent(`${prefix} §aNew version available! Click to start update preparation!`)
-                .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
+                .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。(追)setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
                 .setHover("show_text", "§aClick to start update preparation!")
                 .chat()
         }
     }).catch((e) => {
         ChatLib.chat(`${prefix} §cError: §f${JSON.parse(e).errorMessage}`);
     });
+    request({
+        url: "https://api.hypixel.net/v2/resources/skyblock/election",
+        json: true
+    }).then((response) => {
+        const currentMayor = response.mayor.name;
+        if (currentMayor !== data.playtimes.mayor.lastmayor) {
+            data.playtimes.mayor.lastmayor = currentMayor;
+            data.playtimes.mayor.playtime = 0;
+        }
+    })
 });
 
 register("gameUnload", () => {
@@ -278,13 +299,14 @@ register("gameUnload", () => {
     data.todaydungeon = sessionDungoenRuns;
     data.todaykuudra = sessionKuudraRuns;
     data.lasttime = Date.now();
+    data.playtimes.mayor.playtime += Number(((Date.now() - data.playtimes.mayor.jointime) / 1000).toFixed());
     data.save();
 });
 
 // bcc blacklist abc
 // com   arg0    arg1
 // bcc debug getuuid tdmy
-//    command name  debugname
+//    command name  debugName
 register("command", (...args) => {
     let floorChat = null;
     let masterChat = null;
@@ -295,7 +317,7 @@ register("command", (...args) => {
     }
     const command = args[0] === undefined ? undefined : args[0].toLowerCase();
     const name = args[1];
-    let debugname = args[2];
+    let debugName = args[2];
     if (command) {
         floorChat = args[0].match(/f(\d)/i);
         masterChat = args[0].match(/m(\d)/i);
@@ -421,9 +443,9 @@ register("command", (...args) => {
             lists(name, "whitelist");
             break;
         case "cute": {
-            const cutenum = Math.floor(Math.random() * 6);
-            const cutevids = cutes[cutenum];
-            ChatLib.chat(`§aCute things are cute, that's why cute things are cute, and cute means cute, so cute is cute plus cute.§r \n${cutevids}`);
+            const cuteNum = Math.floor(Math.random() * 6);
+            const cuteVids = cutes[cuteNum];
+            ChatLib.chat(`§aCute things are cute, that's why cute things are cute, and cute means cute, so cute is cute plus cute.§r \n${cuteVids}`);
             break;
         }
         case "stop":
@@ -447,13 +469,13 @@ register("command", (...args) => {
                     ChatLib.chat("firsttime set to false");
                     break;
                 case "getuuid":
-                    if (!debugname) {
+                    if (!debugName) {
                         ChatLib.chat("no name");
                         break;
                     }
-                    debugname = debugname.toLowerCase();
+                    debugName = debugName.toLowerCase();
                     request({
-                        url: `https://api.mojang.com/users/profiles/minecraft/${debugname}`,
+                        url: `https://api.mojang.com/users/profiles/minecraft/${debugName}`,
                         json: true
                     }).then((response) => {
                         const getuuid = response.id;
@@ -467,11 +489,11 @@ register("command", (...args) => {
                     });
                     break;
                 case "version":
-                    if (!debugname) {
+                    if (!debugName) {
                         ChatLib.chat("no name");
                         break;
                     }
-                    data.lastversion = debugname;
+                    data.lastversion = debugName;
                     data.save();
                     ChatLib.chat("lastversion changed");
                     break;
@@ -490,6 +512,11 @@ register("command", (...args) => {
                     break;
                 case "lookingat":
                     ChatLib.chat(Player.lookingAt());
+                    break;
+                case "resetmayor":
+                    data.playtimes.mayor.playtime = 0;
+                    data.save();
+                    ChatLib.chat("mayorplaytime set to 0");
                     break;
             }
             break;
@@ -575,10 +602,12 @@ register("command", (listsPlayer) => {
     lists(listsPlayer, "whitelist");
 }).setName("bccwhitelist");
 
+
+
 register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
     if (Date.now() - lastTimeUsed < 1000) return;
-    runCommand(player, message, "party");
+    avoidSlowDown(player, message, "party");
     lastTimeUsed = Date.now();
 }).setCriteria(/^Party >(?: \[.+\])? (\w+)(?: [Ⓑ|ቾ|⚒])?: !(.+)/);
 
@@ -590,7 +619,7 @@ register("chat", (player, message) => {
 register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
     if (Date.now() - lastTimeUsed < 1000) return;
-    runCommand(player, message, "dm");
+    avoidSlowDown(player, message, "dm");
     lastTimeUsed = Date.now();
 }).setCriteria(/^From(?: \[.+\])? (\w+): !(.+)/);
 
@@ -598,7 +627,7 @@ register("chat", (player, message) => {
     if (!Settings.AllCommandToggle) return;
     if (!Settings.allchattoggle) return;
     if (Date.now() - lastTimeUsed < 3000) return;
-    runCommand(player, message, "all");
+    avoidSlowDown(player, message, "all");
     lastTimeUsed = Date.now();
 }).setCriteria(/^\[\d+\](?: .+)?(?: \[.+\])? (\w+)(?: [Ⓑ|ቾ|⚒])?: !(.+)/);
 //[400] ➶ [MVP+] TdMy ቾ: !dice
@@ -610,22 +639,21 @@ register("chat", (player, message) => {
 // ■   ■    ■
 // ■   ■    ■
 // ■■■      ■
-let saidDt = false;
 register("chat", () => {
     if (!Settings.AllCommandToggle) return;
     if (!Settings.Partydt) return;
     if (!afterDownTime) return;
     if (saidDt) return;
-    let dtchat = "pc Need dt: ";
+    let dtChat = "pc Need dt: ";
     for (let i = 0; i < downTimePlayer.length; i++) {
-        dtchat += `${downTimePlayer[i]}: ${downTimeReason[i]}`;
+        dtChat += `${downTimePlayer[i]}: ${downTimeReason[i]}`;
         if (i < downTimePlayer.length - 1) {
-            dtchat += ", ";
+            dtChat += ", ";
         }
     }
     saidDt = true;
     setTimeout(() => {
-        ChatLib.command(dtchat);
+        ChatLib.command(dtChat);
     }, 1000);
     setTimeout(() => {
         saidDt = false;
@@ -772,8 +800,8 @@ register("chat", () => {
 // ■ ■   ■       ■
 // ■  ■  ■     ■■■
 function checkEnemy() {
-    const whatchoice = Math.floor(Math.random() * 3);
-    playerChoose = RPS[whatchoice];
+    const whatChoice = Math.floor(Math.random() * 3);
+    playerChoose = RPS[whatChoice];
     if (responseWaitTime === 0) {
         isRPSActive = false;
         return;
@@ -784,21 +812,19 @@ function checkEnemy() {
         setTimeout(() => {
             checkEnemy();
             responseWaitTime--;
-        }, 100); //0.1s
+        }, 1000);
     }
 }
 
 function getEnemyChoose() {
     if (enemyChoose != null) {
-        const whatchoice = Math.floor(Math.random() * 3);
-        playerChoose = RPS[whatchoice];
         setTimeout(() => {
             ChatLib.command(`pc I choose ${playerChoose}`);
         }, 500);
     } else {
         setTimeout(() => {
             getEnemyChoose();
-        }, 100);
+        }, 1000);
     }
 }
 
@@ -811,7 +837,7 @@ function winRPS() {
     playerChoose = null;
     dorpsnow = false;
     isRPSActive = false;
-    rpsyou = false;
+    RPSStarter = false;
     enemyHaveBCC = false;
     drawCount = 0;
 }
@@ -825,7 +851,7 @@ function loseRPS() {
     playerChoose = null;
     dorpsnow = false;
     isRPSActive = false;
-    rpsyou = false;
+    RPSStarter = false;
     enemyHaveBCC = false;
     drawCount = 0;
 }
@@ -834,18 +860,18 @@ function drawRPS() {
     drawCount++;
     enemyChoose = null;
     playerChoose = null;
-    const whatchoice = Math.floor(Math.random() * 3);
-    playerChoose = RPS[whatchoice];
+    const whatChoice = Math.floor(Math.random() * 3);
+    playerChoose = RPS[whatChoice];
     setTimeout(() => {
-        if (rpsyou) {
+        if (!RPSStarter) {
             ChatLib.command(`pc I choose ${playerChoose}`);
-        } else if (!rpsyou) {
+        } else if (RPSStarter) {
             getEnemyChoose();
         }
     }, 2000);
 }
 
-register("chat", (player, enemyhand) => {
+register("chat", (player, enemyHand) => {
     if (!Settings.AllCommandToggle) return;
     if (player === Player.getName()) return;
     if (player.includes("ቾ") || player.includes("⚒") || player.includes("Ⓑ")) {
@@ -853,16 +879,14 @@ register("chat", (player, enemyhand) => {
         player = player.split(" ")[0];
     }
     const lowerCasePlayerName = player.toString().toLowerCase();
-    if (isRPSActive !== true) return;
+    if (!isRPSActive) return;
     if (lowerCasePlayerName !== enemyIGN) return;
     if (!enemyHaveBCC) {
         enemyHaveBCC = true;
     }
     if (enemyChoose != null) return;
-    enemyChoose = enemyhand;
-    changed = true;
-    if (playerChoose == null && enemyChoose == null && changed === false) return;
-    changed = false;
+    enemyChoose = enemyHand;
+    if (playerChoose == null && enemyChoose == null) return;
     if (drawCount > 4) {
         enemyChoose = null;
         enemyIGN = null;
@@ -873,46 +897,18 @@ register("chat", (player, enemyhand) => {
         ChatLib.command("pc Five times, the RPS game Forced end.");
         return;
     }
-    switch (enemyChoose) {
-        case "Paper":
-            switch (playerChoose) {
-                case "Paper":
-                    drawRPS();
-                    break;
-                case "Rock":
-                    loseRPS();
-                    break;
-                case "Scissors":
-                    winRPS();
-                    break;
-            }
-            break;
-        case "Rock":
-            switch (playerChoose) {
-                case "Paper":
-                    winRPS();
-                    break;
-                case "Rock":
-                    drawRPS();
-                    break;
-                case "Scissors":
-                    loseRPS();
-                    break;
-            }
-            break;
-        case "Scissors":
-            switch (playerChoose) {
-                case "Paper":
-                    loseRPS();
-                    break;
-                case "Rock":
-                    winRPS();
-                    break;
-                case "Scissors":
-                    drawRPS();
-                    break;
-            }
-            break;
+    if (enemyChoose === "Paper") { //Switch文とか展開されているIf文を使うよりもこれのほうが簡潔で見やすい気がする
+        if (playerChoose === "Paper") drawRPS();
+        else if (playerChoose === "Rock") loseRPS();
+        else if (playerChoose === "Scissors") winRPS();
+    } else if (enemyChoose === "Rock") {
+        if (playerChoose === "Paper") winRPS();
+        else if (playerChoose === "Rock") drawRPS();
+        else if (playerChoose === "Scissors") loseRPS();
+    } else if (enemyChoose === "Scissors") {
+        if (playerChoose === "Paper") loseRPS();
+        else if (playerChoose === "Rock") winRPS();
+        else if (playerChoose === "Scissors") drawRPS();
     }
 }).setCriteria(/^Party >(?: \[.+\])? (\w+) ?[Ⓑ|ቾ|⚒]?: I choose (.+)/);
 
@@ -1028,17 +1024,17 @@ register("tick", () => {
         let now = 0;
         if (inv.getName().includes("Your Bags")) {
             const lore = inv.getStackInSlot(24).getLore();
-            let canscantuning = false;
+            let canScanTuning = false;
             for (let line of lore) {
                 line = ChatLib.removeFormatting(line);
-                if (line.toString()?.includes("+") && canscantuning) {
+                if (line.toString()?.includes("+") && canScanTuning) {
                     tuning += line.substring(line.indexOf("+") + 1, line.indexOf(" "));
                 } else if (line.toString()?.includes("Magical Power:")) {
                     mp = line.substring(line.indexOf(":") + 2)
                 } else if (line.toString()?.includes("Selected Power:")) {
                     power = line.substring(line.indexOf(":") + 2)
                 } else if (line.toString()?.includes("Tuning:")) {
-                    canscantuning = true;
+                    canScanTuning = true;
                 }
             }
         } else if (inv.getName().includes("Accessory Bag Thaumaturgy")) {
@@ -1069,9 +1065,9 @@ register("tick", () => {
             items.slice(0, inv.getSize() - 45).forEach(item => {
                 if (!item) return;
                 const lore = item.getLore();
-                const removeditemname = ChatLib.removeFormatting(item.getName());
-                const removedfirstitemname = removeditemname.split(" ")[0];
-                if (!item.getName().startsWith("§d") && !item.getName().startsWith("§6") && !item.getName().startsWith("§d") && !celeblations.includes(removedfirstitemname)) return;
+                const removedItemName = ChatLib.removeFormatting(item.getName());
+                const removedFirstItemName = removedItemName.split(" ")[0];
+                if (!item.getName().startsWith("§d") && !item.getName().startsWith("§6") && !item.getName().startsWith("§d") && !celeblations.includes(removedFirstItemName)) return;
                 let lines = 0;
                 for (let line of lore) {
                     if (lines > 3) break;
@@ -1146,8 +1142,8 @@ register("tick", () => {
     const inv = Player.getContainer()
     if (scanned || !inv || inv.getName() !== "Detailed /playtime") return;
     scanned = true;
-    const Lore = inv.getStackInSlot(4).getLore();
-    for (let line of Lore) {
+    const lore = inv.getStackInSlot(4).getLore();
+    for (let line of lore) {
         line = ChatLib.removeFormatting(line);
         if (line.toString()?.includes("Crimson")) {
             data.playtimes.Crimson = line.substring(0, line.indexOf("hours") - 1);
@@ -1201,116 +1197,123 @@ register("tick", () => {
     Client.scheduleTask(4, () => {
         const items = inv.getItems();
         if (inv.getName().includes("Slayer RNG Meter")) {
-            const slayertype = ["Zombie", "Spider", "Wolf", "", "Enderman", "Vampire", "Blaze"];
-            let slayerscanned = 0;
+            const slayerType = ["Zombie", "Spider", "Wolf", "", "Enderman", "Vampire", "Blaze"];
+            let slayerScanned = 0;
+            //To improve operating speed. Creating a local variable nearby will make the reference faster than referencing the global variable every time.
+            const rngSlayer = data.RNG.Slayer;
             items.slice(19, 26).forEach(item => {
                 const lore = item?.getLore();
                 if (!lore) {
-                    slayerscanned++;
+                    slayerScanned++;
                     return;
                 }
-                let scanline = 0;
-                const slayer = slayertype[slayerscanned];
+                let scanLine = 0;
+                const slayer = slayerType[slayerScanned];
                 for (let line of lore) {
-                    scanline--;
+                    scanLine--;
                     line = ChatLib.removeFormatting(line);
                     if (line.toString()?.includes("Selected Drop")) {
-                        scanline = 2;
+                        scanLine = 2;
                     } else if (line.toString()?.includes("Progress:")) {
-                        data.RNG.Slayer[slayer][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                        rngSlayer[slayer][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
                     } else if (line.toString()?.includes("Stored Slayer XP:")) {
-                        data.RNG.Slayer[slayer][0] = "noselected";
-                        data.RNG.Slayer[slayer][1] = 0;
+                        rngSlayer[slayer][0] = "noselected";
+                        rngSlayer[slayer][1] = 0;
                     }
-                    if (scanline === 1) {
-                        data.RNG.Slayer[slayer][0] = line.substring(0); //こーれ天才です。任せてください。
+                    if (scanLine === 1) {
+                        rngSlayer[slayer][0] = line.substring(0); //こーれ天才です。任せてください。
                     }
                 }
-                slayerscanned++;
+                slayerScanned++;
             })
             data.save();
         } else if (inv.getName().includes("Catacombs RNG Meter")) {
-            let catacombsfloor = 1;
-            let catacombstype = "Normal";
+            let catacombsFloor = 1;
+            let catacombsType = "Normal";
             items.slice(19, 35).forEach(item => {
                 const lore = item?.getLore();
-                let scanline = 0;
+                let scanLine = 0;
+                const rngCatacombs = data.RNG.Catacombs;
                 for (let line of lore) {
-                    scanline--;
+                    scanLine--;
                     line = ChatLib.removeFormatting(line);
                     if (line.toString()?.includes("M1")) {
-                        catacombstype = "Master";
-                        catacombsfloor = 1;
+                        catacombsType = "Master";
+                        catacombsFloor = 1;
                     } else if (line.toString()?.includes("Selected Drop")) {
-                        scanline = 2;
+                        scanLine = 2;
                     } else if (line.toString()?.includes("Progress:")) {
-                        if (catacombstype === "Normal") {
-                            const normalfloor = `F${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][normalfloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
-                        } else if (catacombstype === "Master") {
-                            const masterfloor = `M${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][masterfloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                        if (catacombsType === "Normal") {
+                            const normalFloor = `F${catacombsFloor}`;
+                            rngCatacombs[catacombsType][normalFloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                        } else if (catacombsType === "Master") {
+                            const masterFloor = `M${catacombsFloor}`;
+                            rngCatacombs[catacombsType][masterFloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
                         }
                     } else if (line.toString()?.includes("Stored Dungeon Score:")) {
-                        if (catacombstype === "Normal") {
-                            const normalfloor = `F${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][normalfloor][0] = "noselected";
-                            data.RNG.Catacombs[catacombstype][normalfloor][1] = 0;
-                        } else if (catacombstype === "Master") {
-                            const masterfloor = `M${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][masterfloor][0] = "noselected";
-                            data.RNG.Catacombs[catacombstype][masterfloor][1] = 0;
+                        if (catacombsType === "Normal") {
+                            const normalFloor = `F${catacombsFloor}`;
+                            rngCatacombs[catacombsType][normalFloor][0] = "noselected";
+                            rngCatacombs[catacombsType][normalFloor][1] = 0;
+                        } else if (catacombsType === "Master") {
+                            const masterFloor = `M${catacombsFloor}`;
+                            rngCatacombs[catacombsType][masterFloor][0] = "noselected";
+                            rngCatacombs[catacombsType][masterFloor][1] = 0;
                         }
                     }
-                    if (scanline === 1) {
-                        if (catacombstype === "Normal") {
-                            const normalfloor = `F${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][normalfloor][0] = line.substring(0);
-                        } else if (catacombstype === "Master") {
-                            const masterfloor = `M${catacombsfloor}`;
-                            data.RNG.Catacombs[catacombstype][masterfloor][0] = line.substring(0);
+                    if (scanLine === 1) {
+                        if (catacombsType === "Normal") {
+                            const normalFloor = `F${catacombsFloor}`;
+                            rngCatacombs[catacombsType][normalFloor][0] = line.substring(0);
+                        } else if (catacombsType === "Master") {
+                            const masterFloor = `M${catacombsFloor}`;
+                            rngCatacombs[catacombsType][masterFloor][0] = line.substring(0);
                         }
                     }
                 }
-                catacombsfloor++;
+                catacombsFloor++;
             })
             data.save();
         } else if (inv.getName().includes("Crystal Nucleus RNG Meter")) {
             const lore = inv.getStackInSlot(4).getLore();
-            let scanline = 0;
+            let scanLine = 0;
+            const rngNucleus = data.RNG.Nucleus;
             for (let line of lore) {
-                scanline--;
+                scanLine--;
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
-                    scanline = 2;
+                    scanLine = 2;
                 } else if (line.toString()?.includes("Progress:")) {
-                    data.RNG.Nucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                    rngNucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    data.RNG.Nucleus[0] = "noselected";
-                    data.RNG.Nucleus[1] = 0;
+                    rngNucleus[0] = "noselected";
+                    rngNucleus[1] = 0;
                 }
-                if (scanline === 1) {
-                    data.RNG.Nucleus[0] = line.substring(0);
+                if (scanLine === 1) {
+                    rngNucleus[0] = line.substring(0);
                 }
             }
+            data.save();
         } else {
             const lore = inv.getStackInSlot(15).getLore();
-            let scanline = 0;
+            let scanLine = 0;
+            const rngNucleus = data.RNG.Nucleus;
             for (let line of lore) {
-                scanline--;
+                scanLine--;
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
-                    scanline = 2;
+                    scanLine = 2;
                 } else if (line.toString()?.includes("Progress:")) {
-                    data.RNG.Nucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                    rngNucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    data.RNG.Nucleus[0] = "noselected";
-                    data.RNG.Nucleus[1] = 0;
+                    rngNucleus[0] = "noselected";
+                    rngNucleus[1] = 0;
                 }
-                if (scanline === 1) {
-                    data.RNG.Nucleus[0] = line.substring(0);
+                if (scanLine === 1) {
+                    rngNucleus[0] = line.substring(0);
                 }
             }
+            data.save();
         }
     })
 })
@@ -1339,7 +1342,7 @@ function autoUpdate() {
             const filesToMove = ["config.toml", "data.json"];
             const fsourceDir = "./config/ChatTriggers/modules/BetterChatCommand/floorconfig/";
             const fdestinationDir = "./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand/floorconfig/";
-            let floorconfigmoved = false;
+            let floorConfigMoved = false;
             filesToMove.forEach(fileName => {
                 const sourceFile = new File(sourceDir + fileName);
                 const destFile = new File(destinationDir + fileName);
@@ -1349,7 +1352,7 @@ function autoUpdate() {
                 } else {
                     console.log(`${fileName} are not exists`);
                 }
-                if (!floorconfigmoved) {
+                if (!floorConfigMoved) {
                     const fsourceFile = new File(fsourceDir + fileName);
                     const fdestFile = new File(fdestinationDir + fileName);
                     if (fsourceFile.exists()) {
@@ -1358,7 +1361,7 @@ function autoUpdate() {
                     } else {
                         console.log(`${fileName} are not exists`);
                     }
-                    floorconfigmoved = true
+                    floorConfigMoved = true
                 }
             });
             FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/BetterChatCommand"))
@@ -1391,6 +1394,16 @@ function urlToFile(url, destination, connectTimeOut, readTimeOut) {
     FilePS.close();
 }
 
+
+function avoidSlowDown(player, message, chatFrom) {
+    if (player === Player.getName()) {
+        setTimeout(() => {
+            runCommand(player, message, chatFrom);
+        }, 500);
+    } else {
+        runCommand(player, message, chatFrom);
+    }
+}
 
 function runCommand(player, message, chatFrom) {
     const lowerCasePlayerName = player.toString().toLowerCase();
@@ -1513,20 +1526,20 @@ function runCommand(player, message, chatFrom) {
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ leader ■■■■■■■■■■■■■■■■■■■■■■■■■■■
             case "ptme":
             case "pt":
-                if (!Settings.Partyptme && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partyptme || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null && Party.leader != null) return;
                 doCommand = `p transfer ${lowerCasePlayerName}`;
                 break;
             case "warp":
             case "pwarp":
-                if (!Settings.Partywarp && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partywarp || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 doCommand = "p warp";
                 break;
             case "warptransfer":
             case "wt":
-                if (!Settings.Partywarptransfer && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partywarptransfer || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
                     ChatLib.command("p warp");
                     setTimeout(() => {
@@ -1541,7 +1554,7 @@ function runCommand(player, message, chatFrom) {
             case "inv":
             case "invite":
                 if (Settings.Partyinv || Settings.DMinvite) {
-                    if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                    if (Party?.leader !== Player.getName() && Party.leader != null) return;
                     const invIGN = parts[1];
                     if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
                         if (chatFrom === "party") {
@@ -1579,25 +1592,25 @@ function runCommand(player, message, chatFrom) {
                 break;
             case "allinv":
             case "allinvite":
-                if (!Settings.Partyallinv && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partyallinv || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 doCommand = "p setting allinvite";
                 break;
             case "promote":
-                if (!Settings.Partypromote && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partypromote || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 doCommand = `p promote ${parts[1]}`;
                 break;
             case "kick":
             case "pkick":
-                if (!Settings.Partypromote && chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() || Party.leader != null) return;
+                if (!Settings.Partypromote || chatFrom !== "party") return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 doCommand = `p kick ${parts[1]}`;
                 break;
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ Utils ■■■■■■■■■■■■■■■■■■■■■■■■■■■
             case "dt":
             case "downtime":
-                if (!Settings.Partydt && chatFrom === "dm") return;
+                if (!Settings.Partydt || chatFrom === "dm") return;
                 afterDownTime = true;
                 afterReady = true;
                 if (!downTimePlayer.includes(lowerCasePlayerName)) {
@@ -1631,7 +1644,7 @@ function runCommand(player, message, chatFrom) {
                 setPlayerReady(lowerCasePlayerName);
                 break;
             case "fps":
-                if (!Settings.Partyfps && chatFrom === "dm") return;
+                if (!Settings.Partyfps || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc FPS: ${Client.getFPS()}`);
                 } else if (isInBlacklist) {
@@ -1641,7 +1654,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "ping":
-                if (!Settings.Partyping && chatFrom === "dm") return;
+                if (!Settings.Partyping || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     Client.sendPacket(new C16PacketClientStatus(C16PacketClientStatus.EnumState.REQUEST_STATS));
                     lastPingAt = System.nanoTime();
@@ -1653,7 +1666,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "tps":
-                if (!Settings.Partytps && chatFrom === "dm") return;
+                if (!Settings.Partytps || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     requestedTPS = true;
                 } else if (isInBlacklist) {
@@ -1667,7 +1680,7 @@ function runCommand(player, message, chatFrom) {
             case "mp":
             case "magical":
             case "tuning":
-                if (!Settings.PartyPower && chatFrom === "dm") return;
+                if (!Settings.PartyPower || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc MP: ${data.profile.mp} | Power: ${data.profile.power} | Tuning: ${data.profile.tuning} | Enrich: ${data.profile.enrichamount}, ${data.profile.enrich}`)
                 } else if (isInBlacklist) {
@@ -1677,7 +1690,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "pet":
-                if (!Settings.PartyPet && chatFrom === "dm") return;
+                if (!Settings.PartyPet || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc Pet: ${data.profile.pet}`);
                 } else if (isInBlacklist) {
@@ -1691,7 +1704,7 @@ function runCommand(player, message, chatFrom) {
             case "whereareyou":
             case "xyz":
             case "waypoint":
-                if (!Settings.PartyCoords && !Settings.DMCoords && !Settings.allchattoggle) return;
+                if (!Settings.PartyCoords || !Settings.DMCoords || !Settings.allchattoggle) return;
                 if (shouldDoCommand) {
                     if (chatFrom === "party") {
                         ChatLib.command(`pc x: ${Math.round(Player.getX())}, y: ${Math.round(Player.getY())}, z: ${Math.round(Player.getZ())}`);
@@ -1711,7 +1724,7 @@ function runCommand(player, message, chatFrom) {
             case "coin":
             case "coinflip":
             case "flip":
-                if (!Settings.Partycf && chatFrom === "dm") return;
+                if (!Settings.Partycf || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${lowerCasePlayerName} rolled ${Math.floor(Math.random() * 2) === 0 ? "Heads" : "Tails"}`);
                 } else if (isInBlacklist) {
@@ -1722,7 +1735,7 @@ function runCommand(player, message, chatFrom) {
                 break;
             case "dice":
             case "roll":
-                if (!Settings.Partydice && chatFrom === "dm") return;
+                if (!Settings.Partydice || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${lowerCasePlayerName} rolled a ${1 + Math.floor(Math.random() * 6)}.`);
                 } else if (isInBlacklist) {
@@ -1732,12 +1745,12 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "rng":
-                if (!Settings.Partyrng && chatFrom === "dm") return;
+                if (!Settings.Partyrng || chatFrom === "dm") return;
                 if (shouldDoCommand) {
-                    const rngign = parts[1];
-                    if (rngign != null && rngign !== "sontaku") {
-                        ChatLib.command(`pc ${rngign} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
-                    } else if (rngign === "sontaku") {
+                    const rngIGN = parts[1];
+                    if (rngIGN != null && rngIGN !== "sontaku") {
+                        ChatLib.command(`pc ${rngIGN} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
+                    } else if (rngIGN === "sontaku") {
                         ChatLib.command(`pc ${lowerCasePlayerName} have 100% RNG Chance.`);
                     } else {
                         ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
@@ -1750,10 +1763,10 @@ function runCommand(player, message, chatFrom) {
                 break;
             case "rrng":
             case "realrng":
-                if (!Settings.PartyRealrng && chatFrom === "dm") return;
+                if (!Settings.PartyRealrng || chatFrom === "dm") return;
                 if (shouldDoCommand) {
-                    const rngtype = parts[1];
-                    switch (rngtype) {
+                    const rngType = parts[1];
+                    switch (rngType) {
                         case "zombie":
                         case "revenant":
                         case "zsl":
@@ -1767,6 +1780,7 @@ function runCommand(player, message, chatFrom) {
                         case "pack":
                         case "wolf":
                         case "sven":
+                        case "wsl":
                             ChatLib.command(`pc WolfRNG: ${data.RNG.Slayer.Wolf[0]}, ${data.RNG.Slayer.Wolf[1]}%`);
                             break;
                         case "enderman":
@@ -1774,16 +1788,19 @@ function runCommand(player, message, chatFrom) {
                         case "void":
                         case "voidgloom":
                         case "seraph":
+                        case "esl":
                             ChatLib.command(`pc EndermanRNG: ${data.RNG.Slayer.Enderman[0]}, ${data.RNG.Slayer.Enderman[1]}%`);
                             break;
                         case "vampire":
                         case "vamp":
                         case "rift":
+                        case "vsl":
                             ChatLib.command(`pc VampireRNG: ${data.RNG.Slayer.Vampire[0]}, ${data.RNG.Slayer.Vampire[1]}%`);
                             break;
                         case "blaze":
                         case "inferno":
                         case "demonlord":
+                        case "bsl":
                             ChatLib.command(`pc BlazeRNG: ${data.RNG.Slayer.Blaze[0]}, ${data.RNG.Slayer.Blaze[1]}%`);
                             break;
                         case "f1":
@@ -1840,16 +1857,16 @@ function runCommand(player, message, chatFrom) {
                     ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis not in whitelist`);
                 }
                 break;
-            case "boop": {
-                if (Settings.Partyboop && chatFrom !== "dm") {
-                    const boopign = parts[1];
-                    if (boopign !== lowerCasePlayerName) return;
+            case "boop":
+                if (Settings.Partyboop || chatFrom !== "dm") {
+                    const boopIGN = parts[1];
+                    if (boopIGN !== lowerCasePlayerName) return;
                     if (shouldDoCommand) {
-                        if (boopign == null) {
+                        if (boopIGN == null) {
                             if (lowerCasePlayerName === lowerCaseGetName) return;
                             ChatLib.command(`boop ${lowerCasePlayerName}`);
                         } else {
-                            ChatLib.command(`boop ${boopign}`);
+                            ChatLib.command(`boop ${boopIGN}`);
                         }
                     } else if (isInBlacklist) {
                         ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
@@ -1858,20 +1875,19 @@ function runCommand(player, message, chatFrom) {
                     }
                 }
                 break;
-            }
             case "rps":
-                if (!Settings.Partyrps && chatFrom === "dm") return;
+                if (!Settings.Partyrps || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     enemyIGN = parts[1];
-                    const whatchoice = Math.floor(Math.random() * 3);
+                    const whatChoice = Math.floor(Math.random() * 3);
                     if (lowerCasePlayerName === lowerCaseGetName) {// me to enemy
                         responseWaitTime = 60;
                         isRPSActive = true;
+                        RPSStarter = true;
                         checkEnemy();
                     } else if (enemyIGN === lowerCaseGetName) {// enemy from me
-                        playerChoose = RPS[whatchoice];
+                        playerChoose = RPS[whatChoice];
                         isRPSActive = true;
-                        fromrps = true;
                         ChatLib.command(`pc I choose ${playerChoose}`);
                     }
                 } else if (isInBlacklist) {
@@ -1881,11 +1897,11 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "meow":
-                if (!Settings.Partymeow && chatFrom === "dm") return;
+                if (!Settings.Partymeow || chatFrom === "dm") return;
                 if (shouldDoCommand) {
-                    const meowign = parts[1];
-                    if (meowign !== lowerCaseGetName) {
-                        ChatLib.command(`tell ${meowign} meow`);
+                    const meowIGN = parts[1];
+                    if (meowIGN !== lowerCaseGetName) {
+                        ChatLib.command(`tell ${meowIGN} meow`);
                     }
                 } else if (isInBlacklist) {
                     ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
@@ -1894,7 +1910,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "cute":
-                if (Settings.Partycute && chatFrom !== "dm") return;
+                if (Settings.Partycute || chatFrom !== "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% Cute.`);
                 } else if (isInBlacklist) {
@@ -1906,7 +1922,7 @@ function runCommand(player, message, chatFrom) {
             case "nowtime":
             case "timezone":
             case "time":
-                if (!Settings.Partynowtime && chatFrom === "dm") return;
+                if (!Settings.Partynowtime || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${new Date().toLocaleTimeString()}`);
                 } else if (isInBlacklist) {
@@ -1916,18 +1932,26 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "playtime":
-                if (!Settings.Partyplaytime && chatFrom === "dm") return;
+                if (!Settings.Partyplaytime || chatFrom === "dm") return;
                 if (shouldDoCommand) {
-                    const timetype = parts[1];
-                    switch (timetype) {
+                    const timeType = parts[1];
+                    switch (timeType) {
                         case "today":
                         case null:
                         case undefined:
-                        case "day":
-                            ptoday = ((Date.now() - data.jointime) / 1000).toFixed();
-                            playtimetoday = formatSeconds(ptoday);
-                            ChatLib.command(`pc Today Playtime: ${playtimetoday}`);
+                        case "day": {
+                            const playTimeToday = formatSeconds(((Date.now() - data.jointime) / 1000).toFixed());
+                            ChatLib.command(`pc Today Playtime: ${playTimeToday}`);
                             break;
+                        }
+                        case "mayor": {
+                            const mayorPlayTime = data.playtimes.mayor.playtime;
+                            const sessionPlayTime = ((Date.now() - data.playtimes.mayor.jointime) / 1000).toFixed();
+                            const addupPlayTime = Number(mayorPlayTime) + Number(sessionPlayTime);
+                            const formatMayorPlayTime = formatSeconds(addupPlayTime);
+                            ChatLib.command(`pc Mayor Playtime: ${formatMayorPlayTime}`);
+                            break;
+                        }
                         case "all":
                         case "alltime":
                             ChatLib.command(`pc Alltime Playtime: ${data.allplaytime}`);
@@ -2012,12 +2036,12 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "runs":
-                if (Settings.Partyruns && chatFrom !== "dm") return;
+                if (Settings.Partyruns || chatFrom !== "dm") return;
                 if (shouldDoCommand) {
-                    const runtype = parts[1];
-                    if (runtype === "kuudra") {
+                    const runType = parts[1];
+                    if (runType === "kuudra") {
                         ChatLib.command(`pc Today Kuudra Runs: ${sessionKuudraRuns}`);
-                    } else if (runtype === "dungeon" || runtype === "dungeons" || runtype === "catacombs" || runtype == null || runtype === undefined) {
+                    } else if (runType === "dungeon" || runType === "dungeons" || runType === "catacombs" || runType == null || runType === undefined) {
                         ChatLib.command(`pc Today Dungeon Runs: ${sessionDungoenRuns}`);
                     }
                 } else if (isInBlacklist) {
@@ -2028,7 +2052,7 @@ function runCommand(player, message, chatFrom) {
                 break;
             case "iq":
             case "iqtest":
-                if (!Settings.Partyiq && chatFrom === "dm") return;
+                if (!Settings.Partyiq || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     const iqIGN = parts[1];
                     const iqIs = Math.floor(Math.random() * 302);

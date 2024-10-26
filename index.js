@@ -6,7 +6,7 @@ import request from "requestV2/index";
 
 
 //It's a pain to separate everything into files now.
-//initial
+//initial, command
 const metadata = JSON.parse(FileLib.read("BetterChatCommand", "metadata.json"));
 const version = metadata.version;
 const prefix = "§8[§aBCC§8]§r";
@@ -19,15 +19,11 @@ const cutes = [
     "https://www.youtube.com/live/NqOmHpwMUxs?si=-JS587RWh2bObzeR",
     "https://www.youtube.com/live/abbR-Ttd-cA?si=7R0ofqHSPasIBQk3"
 ];
+//ping, tps
 const C16PacketClientStatus = Java.type("net.minecraft.network.play.client.C16PacketClientStatus");
 const S37PacketStatistics = Java.type("net.minecraft.network.play.server.S37PacketStatistics");
 const S03_PACKET_TIME_UPDATE = Java.type("net.minecraft.network.play.server.S03PacketTimeUpdate");
 const System = Java.type("java.lang.System");
-const Byte = Java.type("java.lang.Byte");
-const PrintStream = Java.type("java.io.PrintStream");
-const URL = Java.type("java.net.URL");
-const File = Java.type("java.io.File");
-let lastTimeUsed = 0;
 //dt
 let afterDownTime = false;
 let downTimePlayer = [];
@@ -60,9 +56,20 @@ let scanned = false;
 const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purple", "Red", "Yellow", "Flushed", "Happy", "Cheeky", "Cool", "Cute", "Derp", "Grumpy", "Regular", "Shock", "Tears"];
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
-//autoUpdate
+//autoUpdate 
+const Byte = Java.type("java.lang.Byte");
+const PrintStream = Java.type("java.io.PrintStream");
+const URL = Java.type("java.net.URL");
+const File = Java.type("java.io.File");
+let lastTimeUsed = 0;
 let canUpdate = false;
 let updating = false;
+//rng
+const rngValue = JSON.parse(FileLib.read("BetterChatCommand", "RNGValues.json"));
+let rngCatacombsType = "";
+let rngFloor = "";
+let rngAdded = false;
+let nowSlayer = "";
 
 const data = new PogObject(
     "BetterChatCommand",
@@ -325,7 +332,7 @@ register("command", (...args) => {
     }
 
     //ここらへん綺麗にしたい所ではある
-    if (floorChat != null) {
+    if (floorChat) {
         switch (floorChat[1]) {
             case "0":
                 ChatLib.command("joininstance catacombs_Entranse");
@@ -355,7 +362,7 @@ register("command", (...args) => {
         return;
     }
 
-    if (masterChat != null) {
+    if (masterChat) {
         switch (masterChat[1]) {
             case "1":
                 ChatLib.command("joininstance master_catacombs_floor_one");
@@ -386,7 +393,7 @@ register("command", (...args) => {
         return;
     }
 
-    if (tierChat != null) {
+    if (tierChat) {
         switch (tierChat[1]) {
             case "1":
                 ChatLib.command("joininstance kuudra_Basic");
@@ -683,7 +690,7 @@ function setPlayerReady(readyName) {
             .chat();
         setTimeout(() => {
             if (!stopReady) {
-                if (joinFloor == null) {
+                if (!joinFloor) {
                     ChatLib.chat(`${prefix} failed to get previous floor`);
                 } else {
                     ChatLib.command(`joininstance ${joinFloor}`);
@@ -700,51 +707,67 @@ function setPlayerReady(readyName) {
 
 register("chat", (mode, floor) => {
     if (mode === "MM") {
+        rngCatacombsType = "Master";
         switch (floor) {
             case "I":
                 joinFloor = "master_catacombs_floor_one";
+                rngFloor = "M1";
                 break;
             case "II":
                 joinFloor = "master_catacombs_floor_two";
+                rngFloor = "M2";
                 break;
             case "III":
                 joinFloor = "master_catacombs_floor_three";
+                rngFloor = "M3";
                 break;
             case "IV":
                 joinFloor = "master_catacombs_floor_four";
+                rngFloor = "M4";
                 break;
             case "V":
                 joinFloor = "master_catacombs_floor_five";
+                rngFloor = "M5";
                 break;
             case "VI":
                 joinFloor = "master_catacombs_floor_six";
+                rngFloor = "M6";
                 break;
             case "VII":
                 joinFloor = "master_catacombs_floor_seven";
+                rngFloor = "M7";
                 break;
         }
     } else {
+        rngCatacombsType = "Normal"
         switch (floor) {
             case "I":
                 joinFloor = "catacombs_floor_one";
+                rngFloor = "F1";
                 break;
             case "II":
                 joinFloor = "catacombs_floor_two";
+                rngFloor = "F2";
                 break;
             case "III":
                 joinFloor = "catacombs_floor_three";
+                rngFloor = "F3";
                 break;
             case "IV":
                 joinFloor = "catacombs_floor_four";
+                rngFloor = "F4";
                 break;
             case "V":
                 joinFloor = "catacombs_floor_five";
+                rngFloor = "F5";
                 break;
             case "VI":
                 joinFloor = "catacombs_floor_six";
+                rngFloor = "F6";
                 break;
             case "VII":
                 joinFloor = "catacombs_floor_seven";
+                rngFloor = "F7";
                 break;
         }
     }
@@ -817,7 +840,7 @@ function checkEnemy() {
 }
 
 function getEnemyChoose() {
-    if (enemyChoose != null) {
+    if (enemyChoose) {
         setTimeout(() => {
             ChatLib.command(`pc I choose ${playerChoose}`);
         }, 500);
@@ -884,9 +907,9 @@ register("chat", (player, enemyHand) => {
     if (!enemyHaveBCC) {
         enemyHaveBCC = true;
     }
-    if (enemyChoose != null) return;
+    if (enemyChoose) return;
     enemyChoose = enemyHand;
-    if (playerChoose == null && enemyChoose == null) return;
+    if (!playerChoose && !enemyChoose) return;
     if (drawCount > 4) {
         enemyChoose = null;
         enemyIGN = null;
@@ -958,7 +981,7 @@ register("packetReceived", (packet) => {
     }
 
     if (packet instanceof S03_PACKET_TIME_UPDATE && requestedTPS) {
-        if (prevTime !== null) {
+        if (prevTime) {
             const time = Date.now() - prevTime;
             const instantTps = MathLib.clampFloat(20000 / time, 0, 20);
             ChatLib.command(`pc TPS: ${Number.parseFloat(instantTps).toFixed(1)}`);
@@ -1214,11 +1237,12 @@ register("tick", () => {
                     line = ChatLib.removeFormatting(line);
                     if (line.toString()?.includes("Selected Drop")) {
                         scanLine = 2;
-                    } else if (line.toString()?.includes("Progress:")) {
-                        rngSlayer[slayer][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                    } else if (line.endsWith("k") || line.endsWith("M")) {
+                        console.log(`slayer:${line.substring(26, line.indexOf("/"))}`)
+                        rngSlayer[slayer][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
                     } else if (line.toString()?.includes("Stored Slayer XP:")) {
-                        rngSlayer[slayer][0] = "noselected";
-                        rngSlayer[slayer][1] = 0;
+                        rngSlayer[slayer][0] = "unSelected";
+                        rngSlayer[slayer][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
                     }
                     if (scanLine === 1) {
                         rngSlayer[slayer][0] = line.substring(0); //こーれ天才です。任せてください。
@@ -1242,23 +1266,24 @@ register("tick", () => {
                         catacombsFloor = 1;
                     } else if (line.toString()?.includes("Selected Drop")) {
                         scanLine = 2;
-                    } else if (line.toString()?.includes("Progress:")) {
+                    } else if (line.endsWith("k")) {
+                        console.log(`dung:${line.substring(26, line.indexOf("/"))}`)
                         if (catacombsType === "Normal") {
                             const normalFloor = `F${catacombsFloor}`;
-                            rngCatacombs[catacombsType][normalFloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                            rngCatacombs[catacombsType][normalFloor][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
                         } else if (catacombsType === "Master") {
                             const masterFloor = `M${catacombsFloor}`;
-                            rngCatacombs[catacombsType][masterFloor][1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                            rngCatacombs[catacombsType][masterFloor][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
                         }
                     } else if (line.toString()?.includes("Stored Dungeon Score:")) {
                         if (catacombsType === "Normal") {
                             const normalFloor = `F${catacombsFloor}`;
-                            rngCatacombs[catacombsType][normalFloor][0] = "noselected";
-                            rngCatacombs[catacombsType][normalFloor][1] = 0;
+                            rngCatacombs[catacombsType][normalFloor][0] = "unSelected";
+                            rngCatacombs[catacombsType][normalFloor][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
                         } else if (catacombsType === "Master") {
                             const masterFloor = `M${catacombsFloor}`;
-                            rngCatacombs[catacombsType][masterFloor][0] = "noselected";
-                            rngCatacombs[catacombsType][masterFloor][1] = 0;
+                            rngCatacombs[catacombsType][masterFloor][0] = "unSelected";
+                            rngCatacombs[catacombsType][masterFloor][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
                         }
                     }
                     if (scanLine === 1) {
@@ -1283,11 +1308,12 @@ register("tick", () => {
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
                     scanLine = 2;
-                } else if (line.toString()?.includes("Progress:")) {
-                    rngNucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                } else if (line.endsWith("k") || line.endsWith("M")) {
+                    console.log(`nucleus:${line.substring(26, line.indexOf("/"))}`)
+                    rngNucleus[1] = Number(line.substring(26, line.indexOf("/").replace(/,/g, "")))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    rngNucleus[0] = "noselected";
-                    rngNucleus[1] = 0;
+                    rngNucleus[0] = "unSelected";
+                    rngNucleus[1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
                 }
                 if (scanLine === 1) {
                     rngNucleus[0] = line.substring(0);
@@ -1303,11 +1329,12 @@ register("tick", () => {
                 line = ChatLib.removeFormatting(line);
                 if (line.toString()?.includes("Selected Drop")) {
                     scanLine = 2;
-                } else if (line.toString()?.includes("Progress:")) {
-                    rngNucleus[1] = line.substring(line.indexOf(":") + 2, line.indexOf("%"))
+                } else if (line.endsWith("k") || line.endsWith("M")) {
+                    console.log(`nucleus:${line.substring(26, line.indexOf("/"))}`)
+                    rngNucleus[1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    rngNucleus[0] = "noselected";
-                    rngNucleus[1] = 0;
+                    rngNucleus[0] = "unSelected";
+                    rngNucleus[1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
                 }
                 if (scanLine === 1) {
                     rngNucleus[0] = line.substring(0);
@@ -1320,7 +1347,7 @@ register("tick", () => {
 
 function autoUpdate() {
     if (!canUpdate) {
-        ChatLib.chat(`${prefix} No updates available.`);
+        ChatLib.chat(`${prefix} §cNo updates available.`);
         return;
     }
     request({
@@ -1405,6 +1432,63 @@ function avoidSlowDown(player, message, chatFrom) {
     }
 }
 
+
+register("worldUnload", () => {
+    rngAdded = false;
+})
+register("chat", (score) => {
+    if (rngAdded) return;
+    rngAdded = true;
+    const numScore = Number(score);
+    let addScore = 0;
+    if (numScore < 270) return;
+    if (numScore >= 270 && numScore < 300) {
+        addScore = Math.floor(numScore * 0.7)
+    } else if (numScore >= 300) {
+        addScore = numScore;
+    }
+    if (typeof data.RNG.Catacombs[rngCatacombsType][rngFloor][1] === "string") {
+        data.RNG.Catacombs[rngCatacombsType][rngFloor][1] = Number(data.RNG.Catacombs[rngCatacombsType][rngFloor][1]);
+    }
+    data.RNG.Catacombs[rngCatacombsType][rngFloor][1] += addScore;
+    data.save();
+}).setCriteria(/^ *Team Score: (\d+) \(.+\)$/);
+
+register("chat", () => {
+    data.RNG.Catacombs[rngCatacombsType][rngFloor][1] = 0
+}).setCriteria(/^RNG METER! Reselected the .+ for .+ CLICK HERE ato select a new drop!$/)
+
+register("chat", (xp) => {
+    data.RNG.Slayer[nowSlayer][1] = xp;
+}).setCriteria(/^ *RNG Meter - ([\d,]+) Stored XP$/);
+
+register("chat", (mob) => {
+    if (mob === "Spiders") nowSlayer = "Spider";
+    else if (mob === "Zombies") nowSlayer = "Zombie";
+    else if (mob === "Wolves") nowSlayer = "Wolf";
+    else if (mob === "Endermen") nowSlayer = "Enderman";
+    else if (mob === "Blazes") nowSlayer = "Blaze";
+    else if (mob === "Vampires") nowSlayer = "Vampire";
+}).setCriteria(/^ *» Slay .+ Combat XP worth of (\w+).$/);
+
+
+/**
+ * @param {string} meterType Nucleus, Dungeon, Slayer
+ * @param {string|null} typeDetail Normal, Master, SlayerType
+ * @param {string|null} floorType Floor
+ */
+function changeToPercent(meterType, typeDetail, floorType) {
+    let percent = "";
+    if (meterType === "Slayer") {
+        percent = ((data.RNG.Slayer[typeDetail][1] * 100) / rngValue.Slayer[typeDetail][data.RNG.Slayer[typeDetail][0]]).toFixed(1).toString();
+    } else if (meterType === "Dungeon") {
+        percent = ((data.RNG.Catacombs[typeDetail][floorType][1] * 100) / rngValue.Dungeon[floorType][data.RNG.Catacombs[typeDetail][floorType][0]]).toFixed(1).toString();
+    } else if (meterType === "Nucleus") {
+        percent = ((data.RNG.Nucleus[1] * 100) / rngValue.Nucleus[data.RNG.Nucleus[0]]).toFixed(1).toString();
+    }
+    return percent;
+}
+
 function runCommand(player, message, chatFrom) {
     const lowerCasePlayerName = player.toString().toLowerCase();
     const parts = message.toString().toLowerCase().split(" ");
@@ -1420,8 +1504,8 @@ function runCommand(player, message, chatFrom) {
     const isBlackOnlyLeader = Settings.blackonlyleader;
     const shouldDoCommand = (isWhitelistEnabled && (isInWhitelist || (isWhiteOnlyLeader && !isInWhitelist))) || (!isWhitelistEnabled && !isInBlacklist) || (isBlackOnlyLeader && isInBlacklist);
 
-    if (Party?.leader === Player.getName() || Party.leader == null) {
-        if (floorChat != null && chatFrom === "party") {
+    if (Party?.leader === Player.getName() || !Party.leader) {
+        if (floorChat && chatFrom === "party") {
             switch (floorChat[1]) {
                 case "0":
                     if (!PartyFloorSettings.PartyEntrance) return;
@@ -1458,7 +1542,7 @@ function runCommand(player, message, chatFrom) {
             }
         }
 
-        if (masterChat != null && chatFrom === "party") {
+        if (masterChat && chatFrom === "party") {
             switch (masterChat[1]) {
                 case "1":
                     if (!PartyFloorSettings.PartyM1) return;
@@ -1491,7 +1575,7 @@ function runCommand(player, message, chatFrom) {
             }
         }
 
-        if (tierChat != null && chatFrom === "party") {
+        if (tierChat && chatFrom === "party") {
             switch (tierChat[1]) {
                 case "1":
                     if (!PartyFloorSettings.PartyT1) return;
@@ -1517,7 +1601,7 @@ function runCommand(player, message, chatFrom) {
         }
     }
 
-    if (floorChat == null && masterChat == null && tierChat == null) {
+    if (!floorChat && !masterChat && !tierChat) {
         switch (parts[0]) {
             case "help":
                 if (!Settings.Partyhelp) return;
@@ -1527,7 +1611,7 @@ function runCommand(player, message, chatFrom) {
             case "ptme":
             case "pt":
                 if (!Settings.Partyptme || chatFrom !== "party") return;
-                if (Party?.leader !== Player.getName() && Party.leader != null && Party.leader != null) return;
+                if (Party?.leader !== Player.getName() && Party.leader != null) return;
                 doCommand = `p transfer ${lowerCasePlayerName}`;
                 break;
             case "warp":
@@ -1748,7 +1832,7 @@ function runCommand(player, message, chatFrom) {
                 if (!Settings.Partyrng || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     const rngIGN = parts[1];
-                    if (rngIGN != null && rngIGN !== "sontaku") {
+                    if (rngIGN && rngIGN !== "sontaku") {
                         ChatLib.command(`pc ${rngIGN} have ${Math.floor(Math.random() * 100) + 1}% RNG Chance.`);
                     } else if (rngIGN === "sontaku") {
                         ChatLib.command(`pc ${lowerCasePlayerName} have 100% RNG Chance.`);
@@ -1766,90 +1850,135 @@ function runCommand(player, message, chatFrom) {
                 if (!Settings.PartyRealrng || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     const rngType = parts[1];
+                    const rngSlayer = data.RNG.Slayer;
+                    const catacombsNormal = data.RNG.Catacombs.Normal;
+                    const catacombsMaster = data.RNG.Catacombs.Master;
                     switch (rngType) {
                         case "zombie":
                         case "revenant":
-                        case "zsl":
-                            ChatLib.command(`pc ZombieRNG: ${data.RNG.Slayer.Zombie[0]}, ${data.RNG.Slayer.Zombie[1]}%`);
+                        case "zsl": {
+                            const zombiePercent = changeToPercent("Slayer", "Zombie", null);
+                            ChatLib.command(`pc ZombieRNG: ${rngSlayer.Zombie[0]}, ${zombiePercent}%`);
                             break;
+                        }
                         case "spider":
-                        case "tarantula":
-                            ChatLib.command(`pc SpiderRNG: ${data.RNG.Slayer.Spider[0]}, ${data.RNG.Slayer.Spider[1]}%`);
+                        case "tarantula": {
+                            const spiderPercent = changeToPercent("Slayer", "Spider", null);
+                            ChatLib.command(`pc SpiderRNG: ${rngSlayer.Spider[0]}, ${spiderPercent}%`);
                             break;
+                        }
                         case "packmaster":
                         case "pack":
                         case "wolf":
                         case "sven":
-                        case "wsl":
-                            ChatLib.command(`pc WolfRNG: ${data.RNG.Slayer.Wolf[0]}, ${data.RNG.Slayer.Wolf[1]}%`);
+                        case "wsl": {
+                            const wolfPercent = changeToPercent("Slayer", "Wolf", null);
+                            ChatLib.command(`pc WolfRNG: ${rngSlayer.Wolf[0]}, ${wolfPercent}%`);
                             break;
+                        }
                         case "enderman":
                         case "end":
                         case "void":
                         case "voidgloom":
                         case "seraph":
-                        case "esl":
-                            ChatLib.command(`pc EndermanRNG: ${data.RNG.Slayer.Enderman[0]}, ${data.RNG.Slayer.Enderman[1]}%`);
+                        case "esl": {
+                            const endermanPercent = changeToPercent("Slayer", "Enderman", null);
+                            ChatLib.command(`pc EndermanRNG: ${rngSlayer.Enderman[0]}, ${endermanPercent}%`);
                             break;
+                        }
                         case "vampire":
                         case "vamp":
                         case "rift":
-                        case "vsl":
-                            ChatLib.command(`pc VampireRNG: ${data.RNG.Slayer.Vampire[0]}, ${data.RNG.Slayer.Vampire[1]}%`);
+                        case "vsl": {
+                            const vampirePercent = changeToPercent("Slayer", "Vampire", null);
+                            ChatLib.command(`pc VampireRNG: ${rngSlayer.Vampire[0]}, ${vampirePercent}%`);
                             break;
+                        }
                         case "blaze":
                         case "inferno":
                         case "demonlord":
-                        case "bsl":
-                            ChatLib.command(`pc BlazeRNG: ${data.RNG.Slayer.Blaze[0]}, ${data.RNG.Slayer.Blaze[1]}%`);
+                        case "bsl": {
+                            const blazePercent = changeToPercent("Slayer", "Blaze", null);
+                            ChatLib.command(`pc BlazeRNG: ${rngSlayer.Blaze[0]}, ${blazePercent}%`);
                             break;
-                        case "f1":
-                            ChatLib.command(`pc F1RNG: ${data.RNG.Catacombs.Normal.F1[0]}, ${data.RNG.Catacombs.Normal.F1[1]}%`);
+                        }
+                        case "f1": {
+                            const F1Percent = changeToPercent("Dungeon", "Normal", "F1");
+                            ChatLib.command(`pc F1RNG: ${catacombsNormal.F1[0]}, ${F1Percent}%`);
                             break;
-                        case "f2":
-                            ChatLib.command(`pc F2RNG: ${data.RNG.Catacombs.Normal.F2[0]}, ${data.RNG.Catacombs.Normal.F2[1]}%`);
+                        }
+                        case "f2": {
+                            const F2Percent = changeToPercent("Dungeon", "Normal", "F2");
+                            ChatLib.command(`pc F2RNG: ${catacombsNormal.F2[0]}, ${F2Percent}%`);
                             break;
-                        case "f3":
-                            ChatLib.command(`pc F3RNG: ${data.RNG.Catacombs.Normal.F3[0]}, ${data.RNG.Catacombs.Normal.F3[1]}%`);
+                        }
+                        case "f3": {
+                            const F3Percent = changeToPercent("Dungeon", "Normal", "F3");
+                            ChatLib.command(`pc F3RNG: ${catacombsNormal.F3[0]}, ${F3Percent}%`);
                             break;
-                        case "f4":
-                            ChatLib.command(`pc F4RNG: ${data.RNG.Catacombs.Normal.F4[0]}, ${data.RNG.Catacombs.Normal.F4[1]}%`);
+                        }
+                        case "f4": {
+                            const F4Percent = changeToPercent("Dungeon", "Normal", "F4");
+                            ChatLib.command(`pc F4RNG: ${catacombsNormal.F4[0]}, ${F4Percent}%`);
                             break;
-                        case "f5":
-                            ChatLib.command(`pc F5RNG: ${data.RNG.Catacombs.Normal.F5[0]}, ${data.RNG.Catacombs.Normal.F5[1]}%`);
+                        }
+                        case "f5": {
+                            const F5Percent = changeToPercent("Dungeon", "Normal", "F5");
+                            ChatLib.command(`pc F5RNG: ${catacombsNormal.F5[0]}, ${F5Percent}%`);
                             break;
-                        case "f6":
-                            ChatLib.command(`pc F6RNG: ${data.RNG.Catacombs.Normal.F6[0]}, ${data.RNG.Catacombs.Normal.F6[1]}%`);
+                        }
+                        case "f6": {
+                            const F6Percent = changeToPercent("Dungeon", "Normal", "F6");
+                            ChatLib.command(`pc F6RNG: ${catacombsNormal.F6[0]}, ${F6Percent}%`);
                             break;
-                        case "f7":
-                            ChatLib.command(`pc F7RNG: ${data.RNG.Catacombs.Normal.F7[0]}, ${data.RNG.Catacombs.Normal.F7[1]}%`);
+                        }
+                        case "f7": {
+                            const F7Percent = changeToPercent("Dungeon", "Normal", "F7");
+                            ChatLib.command(`pc F7RNG: ${catacombsNormal.F7[0]}, ${F7Percent}%`);
                             break;
-                        case "m1":
-                            ChatLib.command(`pc M1RNG: ${data.RNG.Catacombs.Master.M1[0]}, ${data.RNG.Catacombs.Master.M1[1]}%`);
+                        }
+                        case "m1": {
+                            const M1Percent = changeToPercent("Dungeon", "Master", "M1");
+                            ChatLib.command(`pc M1RNG: ${catacombsMaster.M1[0]}, ${M1Percent}%`);
                             break;
-                        case "m2":
-                            ChatLib.command(`pc M2RNG: ${data.RNG.Catacombs.Master.M2[0]}, ${data.RNG.Catacombs.Master.M2[1]}%`);
+                        }
+                        case "m2": {
+                            const M2Percent = changeToPercent("Dungeon", "Master", "M2");
+                            ChatLib.command(`pc M2RNG: ${catacombsMaster.M2[0]}, ${M2Percent}%`);
                             break;
-                        case "m3":
-                            ChatLib.command(`pc M3RNG: ${data.RNG.Catacombs.Master.M3[0]}, ${data.RNG.Catacombs.Master.M3[1]}%`);
+                        }
+                        case "m3": {
+                            const M3Percent = changeToPercent("Dungeon", "Master", "M3");
+                            ChatLib.command(`pc M3RNG: ${catacombsMaster.M3[0]}, ${M3Percent}%`);
                             break;
-                        case "m4":
-                            ChatLib.command(`pc M4RNG: ${data.RNG.Catacombs.Master.M4[0]}, ${data.RNG.Catacombs.Master.M4[1]}%`);
+                        }
+                        case "m4": {
+                            const M4Percent = changeToPercent("Dungeon", "Master", "M4");
+                            ChatLib.command(`pc M4RNG: ${catacombsMaster.M4[0]}, ${M4Percent}%`);
                             break;
-                        case "m5":
-                            ChatLib.command(`pc M5RNG: ${data.RNG.Catacombs.Master.M5[0]}, ${data.RNG.Catacombs.Master.M5[1]}%`);
+                        }
+                        case "m5": {
+                            const M5Percent = changeToPercent("Dungeon", "Master", "M5");
+                            ChatLib.command(`pc M5RNG: ${catacombsMaster.M5[0]}, ${M5Percent}%`);
                             break;
-                        case "m6":
-                            ChatLib.command(`pc M6RNG: ${data.RNG.Catacombs.Master.M6[0]}, ${data.RNG.Catacombs.Master.M6[1]}%`);
+                        }
+                        case "m6": {
+                            const M6Percent = changeToPercent("Dungeon", "Master", "M6");
+                            ChatLib.command(`pc M6RNG: ${catacombsMaster.M6[0]}, ${M6Percent}%`);
                             break;
-                        case "m7":
-                            ChatLib.command(`pc M7RNG: ${data.RNG.Catacombs.Master.M7[0]}, ${data.RNG.Catacombs.Master.M7[1]}%`);
+                        }
+                        case "m7": {
+                            const M7Percent = changeToPercent("Dungeon", "Master", "M7");
+                            ChatLib.command(`pc M7RNG: ${catacombsMaster.M7[0]}, ${M7Percent}%`);
                             break;
+                        }
                         case "nucleus":
                         case "crystal":
-                        case "cn":
-                            ChatLib.command(`pc NucleusRNG: ${data.RNG.Nucleus[0]}, ${data.RNG.Nucleus[1]}%`);
+                        case "cn": {
+                            const nucleusPercent = changeToPercent("Nucleus", null, null);
+                            ChatLib.command(`pc NucleusRNG: ${data.RNG.Nucleus[0]}, ${nucleusPercent}%`);
                             break;
+                        }
                     }
                 } else if (isInBlacklist) {
                     ChatLib.chat(`${prefix} §f${lowerCasePlayerName} §cis in blacklist`);
@@ -1862,7 +1991,7 @@ function runCommand(player, message, chatFrom) {
                     const boopIGN = parts[1];
                     if (boopIGN !== lowerCasePlayerName) return;
                     if (shouldDoCommand) {
-                        if (boopIGN == null) {
+                        if (!boopIGN) {
                             if (lowerCasePlayerName === lowerCaseGetName) return;
                             ChatLib.command(`boop ${lowerCasePlayerName}`);
                         } else {
@@ -2041,7 +2170,7 @@ function runCommand(player, message, chatFrom) {
                     const runType = parts[1];
                     if (runType === "kuudra") {
                         ChatLib.command(`pc Today Kuudra Runs: ${sessionKuudraRuns}`);
-                    } else if (runType === "dungeon" || runType === "dungeons" || runType === "catacombs" || runType == null || runType === undefined) {
+                    } else if (runType === "dungeon" || runType === "dungeons" || runType === "catacombs" || !runType) {
                         ChatLib.command(`pc Today Dungeon Runs: ${sessionDungoenRuns}`);
                     }
                 } else if (isInBlacklist) {
@@ -2056,7 +2185,7 @@ function runCommand(player, message, chatFrom) {
                 if (shouldDoCommand) {
                     const iqIGN = parts[1];
                     const iqIs = Math.floor(Math.random() * 302);
-                    if (iqIGN != null && iqIGN !== "sontaku") {
+                    if (iqIGN && iqIGN !== "sontaku") {
                         if (iqIs === 0) {
                             ChatLib.command(`pc OMG!! ${iqIGN} have 5000 IQ!! NO WAY!!`);
                         } else if (iqIs >= 1 && iqIs <= 85) {
@@ -2096,7 +2225,7 @@ function runCommand(player, message, chatFrom) {
         }
     }
 
-    if (doCommand != null) {
+    if (doCommand) {
         if ((isWhitelistEnabled && isInWhitelist) || (!isWhitelistEnabled && !isInBlacklist)) {
             ChatLib.command(doCommand);
         } else if (isInBlacklist) {

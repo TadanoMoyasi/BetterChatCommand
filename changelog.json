@@ -1,6 +1,8 @@
 [
-    "-Fixed Slayer RNG not being recorded correctly.",
-    "-I changed the code a bit to improve the speed, so there may be bugs. sry",
-    "-Increased the time until today data is reset from 1 hour to 5 hours.",
-    "-Prevented the SlowDown warning from appearing when you run a PartyCommand."
+	"-!rrng meter now changes automatically.",
+	"-Added !playtime mayor.",
+	"-Fixed Slayer RNG not being recorded correctly.",
+	"-Prevented the SlowDown warning from appearing when you run a PartyCommand.",
+	"-I changed the code a bit to improve the speed, so there may be bugs. sry",
+	"-Increased the time until today data is reset from 1 hour to 5 hours."
 ]

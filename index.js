@@ -19,6 +19,7 @@ const cutes = [
     "https://www.youtube.com/live/NqOmHpwMUxs?si=-JS587RWh2bObzeR",
     "https://www.youtube.com/live/abbR-Ttd-cA?si=7R0ofqHSPasIBQk3"
 ];
+let sessionJoinTime = null;
 //ping, tps
 const C16PacketClientStatus = Java.type("net.minecraft.network.play.client.C16PacketClientStatus");
 const S37PacketStatistics = Java.type("net.minecraft.network.play.server.S37PacketStatistics");
@@ -56,7 +57,7 @@ let scanned = false;
 const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purple", "Red", "Yellow", "Flushed", "Happy", "Cheeky", "Cool", "Cute", "Derp", "Grumpy", "Regular", "Shock", "Tears"];
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
-//autoUpdate 
+//autoUpdate
 const Byte = Java.type("java.lang.Byte");
 const PrintStream = Java.type("java.io.PrintStream");
 const URL = Java.type("java.net.URL");
@@ -95,7 +96,6 @@ const data = new PogObject(
         playtimes: {
             mayor: {
                 lastmayor: "",
-                jointime: 1,
                 playtime: 1,
             },
             all: "nodata",
@@ -241,7 +241,7 @@ const check = register("tick", () => {
     } else {
         somefeaturesExists = false;
     }
-    data.playtimes.mayor.jointime = Date.now();
+    sessionJoinTime = Date.now();
     if (data.jointime === 1 || data.lasttime === 1) {
         data.jointime = Date.now();
         data.lasttime = Date.now();
@@ -306,7 +306,7 @@ register("gameUnload", () => {
     data.todaydungeon = sessionDungoenRuns;
     data.todaykuudra = sessionKuudraRuns;
     data.lasttime = Date.now();
-    data.playtimes.mayor.playtime += Number(((Date.now() - data.playtimes.mayor.jointime) / 1000).toFixed());
+    data.playtimes.mayor.playtime += Number(((Date.now() - sessionJoinTime) / 1000).toFixed());
     data.save();
 });
 
@@ -2075,7 +2075,7 @@ function runCommand(player, message, chatFrom) {
                         }
                         case "mayor": {
                             const mayorPlayTime = data.playtimes.mayor.playtime;
-                            const sessionPlayTime = ((Date.now() - data.playtimes.mayor.jointime) / 1000).toFixed();
+                            const sessionPlayTime = ((Date.now() - sessionJoinTime) / 1000).toFixed();
                             const addupPlayTime = Number(mayorPlayTime) + Number(sessionPlayTime);
                             const formatMayorPlayTime = formatSeconds(addupPlayTime);
                             ChatLib.command(`pc Mayor Playtime: ${formatMayorPlayTime}`);

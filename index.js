@@ -3,9 +3,10 @@ import PartyFloorSettings from "./floorconfig/floorconfig";
 import Party from "../BloomCore/Party";
 import PogObject from "../PogData";
 import request from "requestV2/index";
+import { socketFactory } from "./letsEncryptCerts";
 
 
-//It's a pain to separate everything into files now.
+//ファイル分けはどうやってやるか迷走しまくって訳分かんなくなったからもうやらない。面倒くさい。
 //initial, command
 const metadata = JSON.parse(FileLib.read("BetterChatCommand", "metadata.json"));
 const version = metadata.version;
@@ -23,7 +24,7 @@ let sessionJoinTime = null;
 //ping, tps
 const C16PacketClientStatus = Java.type("net.minecraft.network.play.client.C16PacketClientStatus");
 const S37PacketStatistics = Java.type("net.minecraft.network.play.server.S37PacketStatistics");
-const S03_PACKET_TIME_UPDATE = Java.type("net.minecraft.network.play.server.S03PacketTimeUpdate");
+const S03PacketTimeUpdate = Java.type("net.minecraft.network.play.server.S03PacketTimeUpdate");
 const System = Java.type("java.lang.System");
 //dt
 let afterDownTime = false;
@@ -58,9 +59,6 @@ const celeblations = ["Aqua", "Black", "Green", "Lime", "Orange", "Pink", "Purpl
 let enrichScanned = 0;
 let enrichScannedAmount = 0;
 //autoUpdate
-const Byte = Java.type("java.lang.Byte");
-const PrintStream = Java.type("java.io.PrintStream");
-const URL = Java.type("java.net.URL");
 const File = Java.type("java.io.File");
 let lastTimeUsed = 0;
 let canUpdate = false;
@@ -221,8 +219,8 @@ const data = new PogObject(
     "data.json"
 );
 
-const check = register("tick", () => {
-    check.unregister();
+const firstCheck = register("tick", () => {
+    firstCheck.unregister();
     let first = false;
     if (!data.firstTime) {
         ChatLib.chat("§b§l§m--------------------------------------------");
@@ -530,7 +528,7 @@ register("command", (...args) => {
         default:
             ChatLib.chat(`${prefix} §fVer ${version} ${helps}`);
     }
-}).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "getuuid");
+}).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute");
 
 register("command", () => {
     ChatLib.chat(`${prefix} §fVer ${version} ${helps}`);
@@ -980,7 +978,7 @@ register("packetReceived", (packet) => {
         }
     }
 
-    if (packet instanceof S03_PACKET_TIME_UPDATE && requestedTPS) {
+    if (packet instanceof S03PacketTimeUpdate && requestedTPS) {
         if (prevTime) {
             const time = Date.now() - prevTime;
             const instantTps = MathLib.clampFloat(20000 / time, 0, 20);
@@ -1164,50 +1162,37 @@ register("chat", (hour, minutes) => {
 register("tick", () => {
     const inv = Player.getContainer()
     if (scanned || !inv || inv.getName() !== "Detailed /playtime") return;
+    const locations = [
+        { name: "Crimson", key: "Crimson" },
+        { name: "Crystal", key: "Crystal" },
+        { name: "Dark Auction", key: "Dark" },
+        { name: "Deep", key: "Deep" },
+        { name: "Dungeon Hub", key: "DHub" },
+        { name: "Dungeon", key: "Dungeon" },
+        { name: "Dwarven", key: "Dwarven" },
+        { name: "Garden", key: "Garden" },
+        { name: "Gold", key: "Gold" },
+        { name: "Hub", key: "Hub" },
+        { name: "Jerry", key: "Jerry" },
+        { name: "Kuudra", key: "Kuudra" },
+        { name: "Mineshaft", key: "Shaft" },
+        { name: "Private", key: "Island" },
+        { name: "Spider", key: "Spider" },
+        { name: "End", key: "End" },
+        { name: "Farming", key: "Farm" },
+        { name: "Park", key: "Park" },
+        { name: "Rift", key: "Rift" },
+    ];
     scanned = true;
     const lore = inv.getStackInSlot(4).getLore();
     for (let line of lore) {
         line = ChatLib.removeFormatting(line);
-        if (line.toString()?.includes("Crimson")) {
-            data.playtimes.Crimson = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Crystal")) {
-            data.playtimes.Crystal = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Dark Auction")) {
-            data.playtimes.Dark = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Deep")) {
-            data.playtimes.Deep = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Dungeon Hub")) {
-            data.playtimes.DHub = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Dungeon")) {
-            data.playtimes.Dungeon = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Dwarven")) {
-            data.playtimes.Dwarven = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Garden")) {
-            data.playtimes.Garden = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Gold")) {
-            data.playtimes.Gold = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Hub")) {
-            data.playtimes.Hub = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Jerry")) {
-            data.playtimes.Jerry = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Kuudra")) {
-            data.playtimes.Kuudra = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Mineshaft")) {
-            data.playtimes.Shaft = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Private")) {
-            data.playtimes.Island = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Spider")) {
-            data.playtimes.Spider = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("End")) {
-            data.playtimes.End = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Farming")) {
-            data.playtimes.Farm = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Park")) {
-            data.playtimes.Park = line.substring(0, line.indexOf("hours") - 1);
-        } else if (line.toString()?.includes("Rift")) {
-            data.playtimes.Rift = line.substring(0, line.indexOf("hours") - 1);
+        for (const location of locations) {
+            if (line.toString()?.includes(location.name)) {
+                data.playtimes[location.key] = line.substring(0, line.indexOf("hours") - 1);
+            }
         }
-    }// なんて強引な書き方なんだ
+    }// なんてスタイリッシュな書き方なんだ
     data.save();
 })
 
@@ -1238,7 +1223,6 @@ register("tick", () => {
                     if (line.toString()?.includes("Selected Drop")) {
                         scanLine = 2;
                     } else if (line.endsWith("k") || line.endsWith("M")) {
-                        console.log(`slayer:${line.substring(26, line.indexOf("/"))}`)
                         rngSlayer[slayer][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
                     } else if (line.toString()?.includes("Stored Slayer XP:")) {
                         rngSlayer[slayer][0] = "unSelected";
@@ -1267,7 +1251,6 @@ register("tick", () => {
                     } else if (line.toString()?.includes("Selected Drop")) {
                         scanLine = 2;
                     } else if (line.endsWith("k")) {
-                        console.log(`dung:${line.substring(26, line.indexOf("/"))}`)
                         if (catacombsType === "Normal") {
                             const normalFloor = `F${catacombsFloor}`;
                             rngCatacombs[catacombsType][normalFloor][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
@@ -1309,7 +1292,6 @@ register("tick", () => {
                 if (line.toString()?.includes("Selected Drop")) {
                     scanLine = 2;
                 } else if (line.endsWith("k") || line.endsWith("M")) {
-                    console.log(`nucleus:${line.substring(26, line.indexOf("/"))}`)
                     rngNucleus[1] = Number(line.substring(26, line.indexOf("/").replace(/,/g, "")))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
                     rngNucleus[0] = "unSelected";
@@ -1330,7 +1312,6 @@ register("tick", () => {
                 if (line.toString()?.includes("Selected Drop")) {
                     scanLine = 2;
                 } else if (line.endsWith("k") || line.endsWith("M")) {
-                    console.log(`nucleus:${line.substring(26, line.indexOf("/"))}`)
                     rngNucleus[1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""))
                 } else if (line.toString()?.includes("Stored Nucleus XP:")) {
                     rngNucleus[0] = "unSelected";
@@ -1403,9 +1384,16 @@ function autoUpdate() {
 }
 
 function urlToFile(url, destination, connectTimeOut, readTimeOut) {
+    const URL = Java.type("java.net.URL");
+    const HttpsUrlConnection = Java.type('javax.net.ssl.HttpsURLConnection');
+    const PrintStream = Java.type("java.io.PrintStream");
+    const Byte = Java.type("java.lang.Byte");
     const dir = new File(destination);
     dir.getParentFile().mkdirs();// BCCtempmade tukuru
     const connection = new URL(url).openConnection();
+    if (connection instanceof HttpsUrlConnection) {
+        connection.setSSLSocketFactory(socketFactory);
+    }
     connection.setDoOutput(true);
     connection.setConnectTimeout(connectTimeOut);
     connection.setReadTimeout(readTimeOut);
@@ -1476,6 +1464,7 @@ register("chat", (mob) => {
  * @param {string} meterType Nucleus, Dungeon, Slayer
  * @param {string|null} typeDetail Normal, Master, SlayerType
  * @param {string|null} floorType Floor
+ * @returns {string} persent
  */
 function changeToPercent(meterType, typeDetail, floorType) {
     let percent = "";
@@ -1987,7 +1976,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "boop":
-                if (Settings.Partyboop || chatFrom !== "dm") {
+                if (!Settings.Partyboop || chatFrom !== "dm") {
                     const boopIGN = parts[1];
                     if (boopIGN !== lowerCasePlayerName) return;
                     if (shouldDoCommand) {
@@ -2039,7 +2028,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "cute":
-                if (Settings.Partycute || chatFrom !== "dm") return;
+                if (!Settings.Partycute || chatFrom !== "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% Cute.`);
                 } else if (isInBlacklist) {
@@ -2165,7 +2154,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "runs":
-                if (Settings.Partyruns || chatFrom !== "dm") return;
+                if (!Settings.Partyruns || chatFrom !== "dm") return;
                 if (shouldDoCommand) {
                     const runType = parts[1];
                     if (runType === "kuudra") {

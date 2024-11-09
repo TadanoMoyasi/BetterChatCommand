@@ -1,8 +1,5 @@
 [
-	"-!rrng meter now changes automatically.",
-	"-Added !playtime mayor.",
-	"-Fixed Slayer RNG not being recorded correctly.",
-	"-Prevented the SlowDown warning from appearing when you run a PartyCommand.",
-	"-I changed the code a bit to improve the speed, so there may be bugs. sry",
-	"-Increased the time until today data is reset from 1 hour to 5 hours."
+	"-Fixed !cute, !runs, and !boop did not work.",
+	"-Automatic downloads now work without the Import Fix!! Yay!!",
+	"-Fixed the issue where /rng would output a large amount of text to the console."
 ]

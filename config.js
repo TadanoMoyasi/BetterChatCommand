@@ -12,7 +12,7 @@ import {
 } from 'Vigilance';
 import PartyFloorSettings from "./floorconfig/floorconfig";
 
-const version = "1.5.1"
+const version = "1.5.2"
 @Vigilant("BetterChatCommand", "§f§lBetterChatCommand", {
     getCategoryComparator: () => (a, b) => {
         const categories = ["General", "Party", "DM"];

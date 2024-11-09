@@ -1,8 +1,8 @@
 {
-    "name": "BetterChatCommand",
-    "description": "Can toggle all chatcommands. /bcc",
-    "author": "TadanoMoyasi",
-    "entry": "index.js",
-    "version": "1.5.1",
-    "requires": ["Vigilance", "BloomCore", "PogData", "requestV2"]
+	"name": "BetterChatCommand",
+	"description": "Can toggle all chatcommands. /bcc",
+	"author": "TadanoMoyasi",
+	"entry": "index.js",
+	"version": "1.5.2",
+	"requires": ["Vigilance", "BloomCore", "PogData", "requestV2"]
 }

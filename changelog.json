@@ -1,5 +1,4 @@
 [
-	"-Fixed !cute, !runs, and !boop did not work.",
-	"-Automatic downloads now work without the Import Fix!! Yay!!",
-	"-Fixed the issue where /rng would output a large amount of text to the console."
+    "-Fixed !cute, !runs, and !boop did not work.(real)",
+    "-Fixed Playtime All being undefined."
 ]

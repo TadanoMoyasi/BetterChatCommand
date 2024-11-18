@@ -279,13 +279,13 @@ const firstCheck = register("tick", () => {
         const BCCLetestVersion = response.name;
         if (version !== BCCLetestVersion) {
             canUpdate = true;
-            new TextComponent(`${prefix} §aNew version available! Click to start update preparation!`)
+            new TextComponent(`${prefix} §aNew version available! Click to start update!`)
                 .setClick("run_command", "/bcc update") // setClickValueだと動かなかった。みんな気をつけようね。(追)setclickactionと一緒に使うやつなんだから動くわけ無いですね。アホです。
-                .setHover("show_text", "§aClick to start update preparation!")
+                .setHover("show_text", "§aClick to start update!")
                 .chat()
         }
     }).catch((e) => {
-        ChatLib.chat(`${prefix} §cError: §f${JSON.parse(e).errorMessage}`);
+        ChatLib.chat(`${prefix} §cError: ${JSON.parse(e).errorMessage}`);
     });
     request({
         url: "https://api.hypixel.net/v2/resources/skyblock/election",
@@ -1376,9 +1376,9 @@ function autoUpdate() {
             new File("./config/ChatTriggers/modules/BCCtemp/BetterChatCommand/BetterChatCommand").renameTo(new File("./config/ChatTriggers/modules/BetterChatCommand"))
             FileLib.deleteDirectory(new File("./config/ChatTriggers/modules/BCCtemp"))
         }).start()
-        new TextComponent(`${prefix} Update Ready! Click to Start Update!`)
+        new TextComponent(`${prefix} Update Completed! Click to Load Update!`)
             .setClick("run_command", "/ct load")
-            .setHover("show_text", "§aClick to Start Update!")
+            .setHover("show_text", "§aClick to Load Update!")
             .chat()
     })
 }
@@ -1843,6 +1843,9 @@ function runCommand(player, message, chatFrom) {
                     const catacombsNormal = data.RNG.Catacombs.Normal;
                     const catacombsMaster = data.RNG.Catacombs.Master;
                     switch (rngType) {
+                        case "help":
+                            ChatLib.command("pc rrng (rngtype)");
+                            break;
                         case "zombie":
                         case "revenant":
                         case "zsl": {
@@ -2028,7 +2031,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "cute":
-                if (!Settings.Partycute || chatFrom !== "dm") return;
+                if (!Settings.Partycute || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     ChatLib.command(`pc ${lowerCasePlayerName} have ${Math.floor(Math.random() * 100) + 1}% Cute.`);
                 } else if (isInBlacklist) {
@@ -2054,6 +2057,9 @@ function runCommand(player, message, chatFrom) {
                 if (shouldDoCommand) {
                     const timeType = parts[1];
                     switch (timeType) {
+                        case "help":
+                            ChatLib.command("pc playtime (timetype)");
+                            break;
                         case "today":
                         case null:
                         case undefined:
@@ -2072,7 +2078,7 @@ function runCommand(player, message, chatFrom) {
                         }
                         case "all":
                         case "alltime":
-                            ChatLib.command(`pc Alltime Playtime: ${data.allplaytime}`);
+                            ChatLib.command(`pc Alltime Playtime: ${data.playtimes.all}`);
                             break;
                         case "crim":
                         case "crimson":
@@ -2154,7 +2160,7 @@ function runCommand(player, message, chatFrom) {
                 }
                 break;
             case "runs":
-                if (!Settings.Partyruns || chatFrom !== "dm") return;
+                if (!Settings.Partyruns || chatFrom === "dm") return;
                 if (shouldDoCommand) {
                     const runType = parts[1];
                     if (runType === "kuudra") {

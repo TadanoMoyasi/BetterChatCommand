@@ -14,9 +14,11 @@
 
 ### General
 /bcc
+  - noParty PartyCommand
   - Blacklist
   - Whitelist
   - inviteConfirm
+  - afterInvite
   - etc
 
 ### PartyCommands
@@ -44,7 +46,7 @@
   - !rng  (fake)
   - !rrng (real rng chance)
   - !boop
-  - !rps (wip)
+  - !rps (WIP)
   - !meow
   - !cute
   - !nowtime

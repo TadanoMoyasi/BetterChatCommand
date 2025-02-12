@@ -1,3 +1,4 @@
+import { Options } from "discord.js";
 import {
     @ButtonProperty,
     @CheckboxProperty,
@@ -59,6 +60,33 @@ class Settings {
         subcategory: "General"
     })
     noPartyCommand = false;
+
+    @SwitchProperty ({
+    name: "auto Requeue",
+    description: "auto Requeue in Dungeon, Kuudra",
+    category: "General",
+    subcategory: "Requeue"
+    })
+    autoRequeueToggle = false;
+
+    @SliderProperty({
+        name: "Requeue Time",
+        description: "Waiting time after clearing dungeon, kuudra",
+        category: "General",
+        subcategory: "Requeue",
+        min: 0,
+        max: 60
+    })
+    autoRequeueTime = 10;
+
+    @SelectorProperty({
+        name: "Requeue Type",
+        description: "instance requeue or joinInstance",
+        category: "General",
+        subcategory: "Requeue",
+        options: ["instance", "joinInstance"]
+    })
+    autoRequeueType = 0;
 
     @SwitchProperty({
         name: "whitelist toggle",

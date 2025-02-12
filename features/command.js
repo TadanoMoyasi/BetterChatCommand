@@ -6,6 +6,7 @@ import { joinInstance } from "./partyCommands/floor.js";
 import { changeConfirm } from "./partyCommands/invite.js";
 import { changeStopReady } from "./partyCommands/downtime.js";
 import { aqua, C01PacketChatMessage, darkGray, formatPrefix, green, red, reset, spacing, version, white, yellow } from "../utils/utils.js";
+import { requeueStop } from "./autoRequeue.js";
 
 let showChatPacket = false;
 
@@ -92,6 +93,9 @@ register("command", (...args) => {
             break;
         case "update":
             autoUpdate();
+            break;
+        case "stopRequeue":
+            requeueStop();
             break;
         case "debug":
             if (!name) {

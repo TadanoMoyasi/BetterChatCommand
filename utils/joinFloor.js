@@ -41,7 +41,7 @@ register("chat", (mode, floor) => {
     } else {
         switch (floor) {
             case "Entrance":
-                joinFloor = "cataconbs_entrance";
+                joinFloor = "catacombs_entrance";
                 nowFloor = "Entrance";
                 break;
             case "Floor I":

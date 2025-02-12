@@ -5,12 +5,12 @@ import { getSessionDungeonRuns, getSessionKuudraRuns, resetRuns, setRuns } from 
 
 let cantAutoUpdate = false;
 let canUpdate = false;
-let somefeaturesExists = false;
+let bloomCoreExists = false;
 
 
 export function getCanUpdate() { return canUpdate };
 
-export function getSomefeatures() { return somefeaturesExists };
+export function getBloomCoreExists() { return bloomCoreExists };
 
 const firstCheck = register("tick", () => {
     firstCheck.unregister();
@@ -25,9 +25,7 @@ const firstCheck = register("tick", () => {
         data.firstTime = true;
         first = true;
     }
-    const fileExists = FileLib.exists("somefeatures", "features/autorequeue.js");
-    if (fileExists) somefeaturesExists = true;
-    else somefeaturesExists = false;
+    bloomCoreExists = FileLib.exists("bloomCore", "Party.js");
     sessionJoinTime = Date.now();
     if (data.playtimes.joinTime === 1 || data.playtimes.leftTime === 1) {
         data.joinTime = Date.now();

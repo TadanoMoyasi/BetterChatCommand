@@ -1,4 +1,4 @@
-/// <reference types="../CTAutocomplete" />
+/// <reference types="../../CTAutocomplete" />
 /// <reference lib="es2015" />
 
 // idk what needs import. so i will import all things
@@ -10,6 +10,7 @@ import "./config/general/generalConfig";
 import "./features/command";
 import "./features/core";
 import "./features/autoUpdate";
+import "./features/autoRequeue";
 
 import "./features/partyCommands/core/runCommand";
 import "./features/partyCommands/core/noPartyRunCommand";

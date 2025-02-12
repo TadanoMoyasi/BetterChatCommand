@@ -1,8 +1,9 @@
 [
     "-Added title to display in downtime.",
     "-!allinv now also requires confirmation.",
-    "-Added afterinvite to BCC as well.",
+    "-Added afterInvite to BCC as well.",
     "-Added a setting that allows you to use PartyCommand even if you are not in a Party.",
     "-Added an experiment to realRNG.",
+    "-Added autoRequeue.",
     "I've rewritten almost all the code, so there are probably some bugs."
 ]

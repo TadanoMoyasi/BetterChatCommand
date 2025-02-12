@@ -2,7 +2,7 @@ import Settings from '../../config/general/generalConfig';
 import packetChat from '../../utils/Class/packetChat';
 import { getJoinFloor } from '../../utils/joinFloor';
 import { formatPrefix, green, red, spacing } from '../../utils/utils';
-import { getSomefeatures } from '../core';
+import { requeueStop } from '../autoRequeue';
 
 //dt
 let afterDownTime = false;
@@ -31,14 +31,12 @@ export function setDownTime(playerName, parts) {
             downTimeReason.push("No reason Given");
         }
         ChatLib.chat(`${formatPrefix} ${green}Reminder set for the end of the run`);
+        requeueStop();
     }
     if (Settings.PartyReady) {
         if (!readyPlayer.includes(playerName)) {
             readyPlayer.push(playerName);
         }
-    }
-    if (getSomefeatures()) {
-        ChatLib.command("somefeaturesrequeuestop", true);
     }
 }
 
@@ -57,8 +55,8 @@ function downTime() {
     saidDT = true;
     setTimeout(() => {
         ChatLib.command(dtChat);
-        Client.showTitle(`${red}DownTime`, "", 0, 20, 0);
-        Client.showTitle(`${red}DownTime`, "", 0, 20, 0);
+        Client.showTitle(`${red}DownTime`, "", 0, 100, 0);
+        Client.showTitle(`${red}DownTime`, "", 0, 100, 0);
     }, 1000);
     setTimeout(() => {
         saidDT = false;
@@ -127,6 +125,6 @@ let first = false;
 if (!first) {
     first = true;
     packetChat.add(/ *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/, downTime);
-    packetChat.add(/[NPC] Mort: You should find it useful if you get lost./, resetDungeonReady);
-    packetChat.add(/[NPC] Elle: Okay adventurers, I will go and fish up Kuudra!/, resetKuudraReady);
+    packetChat.add(/\[NPC\] Mort: You should find it useful if you get lost\./, resetDungeonReady);
+    packetChat.add(/\[NPC\] Elle: Okay adventurers, I will go and fish up Kuudra!/, resetKuudraReady);
 }

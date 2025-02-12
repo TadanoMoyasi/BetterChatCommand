@@ -10,9 +10,9 @@ import {
     @Vigilant,
     @SliderProperty
 } from 'Vigilance';
-import PartyFloorSettings from "./floorconfig/floorconfig";
+import PartyFloorSettings from "../floorConfig/floorConfig";
 
-const version = "1.5.3"
+const version = "2.0.0";
 @Vigilant("BetterChatCommand", "§f§lBetterChatCommand", {
     getCategoryComparator: () => (a, b) => {
         const categories = ["General", "Party", "DM"];
@@ -34,7 +34,7 @@ class Settings {
         category: "General",
         subcategory: "General"
     })
-    AllCommandToggle = true;
+    allCommandToggle = true;
 
     @SwitchProperty({
         name: "Party invite confirmation",
@@ -42,47 +42,47 @@ class Settings {
         category: "General",
         subcategory: "General"
     })
-    Partyinvconfirm = false;
+    PartyInviteConfirm = false;
 
     @SwitchProperty({
-        name: "allchat command",
-        description: "If this is on, commands other than leader commands will work in Allchat.",
+        name: "allChat command",
+        description: "If this is on, commands other than leader commands will work in AllChat.",
         category: "General",
         subcategory: "General"
     })
-    allchattoggle = false;
+    allChatToggle = false;
+
+    @SwitchProperty({
+        name: "no Party Run Command",
+        description: "Allows you to use PartyCommand even when there is no party. \n§cIf this is on, messages starting with ! cannot be sent when there is no Party.",
+        category: "General",
+        subcategory: "General"
+    })
+    noPartyCommand = false;
 
     @SwitchProperty({
         name: "whitelist toggle",
         description: "whitelist toggle on/off",
         category: "General",
-        subcategory: "General"
+        subcategory: "List"
     })
-    whitelisttoggle = false;
+    whitelistToggle = false;
 
     @SwitchProperty({
         name: "whitelist only block leader command",
         description: "If this is off, all commands will be unavailable to players not on the whitelist.(except !dt, !warp)",
         category: "General",
-        subcategory: "General"
+        subcategory: "List"
     })
-    whiteonlyleader = false;
+    whitelistOnlyBlockLeader = false;
 
     @SwitchProperty({
         name: "blacklist only block leader command",
         description: "If this is Off, all commands will be unavailable to players on the BlackList.(except !dt, !warp)",
         category: "General",
-        subcategory: "General"
+        subcategory: "List"
     })
-    blackonlyleader = false;
-
-    @SwitchProperty({
-        name: "debug",
-        description: "I made this for my own use when debugging. Turning it on doesn't add any new features.",
-        category: "General",
-        subcategory: "General"
-    })
-    debugmode = false;
+    blacklistOnlyBlockLeader = false;
 
     // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ Party ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
@@ -92,7 +92,7 @@ class Settings {
         category: "Party",
         subcategory: "General"
     })
-    Partyhelp = true;
+    PartyHelp = true;
 
     @ButtonProperty({
         name: "Floor(tier)",
@@ -111,7 +111,7 @@ class Settings {
         category: "Party",
         subcategory: "Leader"
     })
-    Partyptme = true;
+    PartyPtme = true;
 
     @CheckboxProperty({
         name: "warp",
@@ -119,15 +119,15 @@ class Settings {
         category: "Party",
         subcategory: "Leader"
     })
-    Partywarp = true;
+    PartyWarp = true;
 
     @CheckboxProperty({
-        name: "warptransfer",
+        name: "warpTransfer",
         description: "Warp and Transfer (!wt)",
         category: "Party",
         subcategory: "Leader"
     })
-    Partywarptransfer = true;
+    PartyWarpTransfer = true;
 
     @CheckboxProperty({
         name: "inv",
@@ -135,15 +135,15 @@ class Settings {
         category: "Party",
         subcategory: "Leader"
     })
-    Partyinv = true;
+    PartyInvite = true;
 
     @CheckboxProperty({
-        name: "allinv",
+        name: "allInv",
         description: "Party AllInvite (!allinv)",
         category: "Party",
         subcategory: "Leader"
     })
-    Partyallinv = true;
+    PartyAllInv = true;
 
     @CheckboxProperty({
         name: "promote",
@@ -151,7 +151,7 @@ class Settings {
         category: "Party",
         subcategory: "Leader"
     })
-    Partypromote = true;
+    PartyPromote = true;
 
     @CheckboxProperty({
         name: "kick",
@@ -159,7 +159,7 @@ class Settings {
         category: "Party",
         subcategory: "Leader"
     })
-    Partykick = true;
+    PartyKick = true;
 
     // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ Member ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
@@ -169,7 +169,7 @@ class Settings {
         category: "Party",
         subcategory: "Member"
     })
-    Partydt = true;
+    PartyDT = true;
 
     @CheckboxProperty({
         name: "ready",
@@ -185,7 +185,7 @@ class Settings {
         category: "Party",
         subcategory: "Member"
     })
-    Partyfps = true;
+    PartyFps = true;
 
     @CheckboxProperty({
         name: "ping",
@@ -193,7 +193,7 @@ class Settings {
         category: "Party",
         subcategory: "Member"
     })
-    Partyping = true;
+    PartyPing = true;
 
     @CheckboxProperty({
         name: "tps",
@@ -201,7 +201,7 @@ class Settings {
         category: "Party",
         subcategory: "Member"
     })
-    Partytps = true;
+    PartyTps = true;
 
     @CheckboxProperty({
         name: "power",
@@ -229,11 +229,11 @@ class Settings {
 
     @CheckboxProperty({
         name: "coinflip",
-        description: "Send coinflip (!cf)",
+        description: "Send coinFlip (!cf)",
         category: "Party",
         subcategory: "Other"
     })
-    Partycf = true;
+    PartyCoinFlip = true;
 
     @CheckboxProperty({
         name: "dice",
@@ -241,7 +241,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partydice = true;
+    PartyDice = true;
 
     @CheckboxProperty({
         name: "rng",
@@ -249,7 +249,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyrng = true;
+    PartyRNG = true;
 
     @CheckboxProperty({
         name: "realrng",
@@ -257,7 +257,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    PartyRealrng = true;
+    PartyRealRNG = true;
 
     @CheckboxProperty({
         name: "boop",
@@ -265,7 +265,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyboop = true;
+    PartyBoop = true;
 
     @CheckboxProperty({
         name: "Rock Paper Scissors",
@@ -273,7 +273,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyrps = true;
+    PartyRPS = true;
 
     @CheckboxProperty({
         name: "meow",
@@ -281,7 +281,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partymeow = true;
+    PartyMeow = true;
 
     @CheckboxProperty({
         name: "cute",
@@ -289,15 +289,15 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partycute = true;
+    PartyCute = true;
 
     @CheckboxProperty({
-        name: "nowtime",
+        name: "timeZone",
         description: "send current time and time zone (!time)",
         category: "Party",
         subcategory: "Other"
     })
-    Partynowtime = true;
+    PartyTimeZone = true;
 
     @CheckboxProperty({
         name: "playtime",
@@ -305,7 +305,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyplaytime = true;
+    PartyPlaytime = true;
 
     @CheckboxProperty({
         name: "runs",
@@ -313,7 +313,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyruns = true;
+    PartyRuns = true;
 
     @CheckboxProperty({
         name: "iq",
@@ -321,7 +321,7 @@ class Settings {
         category: "Party",
         subcategory: "Other"
     })
-    Partyiq = true;
+    PartyIQ = true;
 
     // ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ DM ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 

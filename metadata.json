@@ -1,8 +1,9 @@
 {
+	"$schema": "../CTAutocomplete/schema.json",
 	"name": "BetterChatCommand",
 	"description": "Can toggle all chatcommands. /bcc",
 	"author": "TadanoMoyasi",
 	"entry": "index.js",
-	"version": "1.5.3",
-	"requires": ["Vigilance", "BloomCore", "PogData", "requestV2"]
+	"version": "2.0.0",
+	"requires": ["Vigilance", "PogData", "requestV2"]
 }

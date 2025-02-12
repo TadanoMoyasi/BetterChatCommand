@@ -16,7 +16,7 @@ function loadCertificates() {
     keyStore.load(Files.newInputStream(ksPath), new JavaString("changeit").toCharArray())
     let cf = CertificateFactory.getInstance("X.509")
     for (let i of certificates) {
-        let pathStr = `${Config.modulesFolder}/BetterChatCommand/certs/${i}`
+        let pathStr = `${Config.modulesFolder}/BetterChatCommand/utils/certs/${i}`
         let path = Paths.get(pathStr)
         let data = Files.readAllBytes(path)
         let cert = cf.generateCertificate(new ByteArrayInputStream(data))

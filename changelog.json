@@ -1,4 +1,8 @@
 [
-    "-Fixed !cute, !runs, and !boop did not work.(real)",
-    "-Fixed Playtime All being undefined."
+    "-Added title to display in downtime.",
+    "-!allinv now also requires confirmation.",
+    "-Added afterinvite to BCC as well.",
+    "-Added a setting that allows you to use PartyCommand even if you are not in a Party.",
+    "-Added an experiment to realRNG.",
+    "I've rewritten almost all the code, so there are probably some bugs."
 ]

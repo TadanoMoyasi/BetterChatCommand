@@ -1,0 +1,172 @@
+import request from "requestV2/index.js";
+import Settings from "../config/general/generalConfig.js";
+import { data } from "../data/data.js"
+import { lists } from "./partyCommands/lists.js";
+import { joinInstance } from "./partyCommands/floor.js";
+import { changeConfirm } from "./partyCommands/invite.js";
+import { changeStopReady } from "./partyCommands/downtime.js";
+import { aqua, C01PacketChatMessage, darkGray, formatPrefix, green, red, reset, spacing, version, white, yellow } from "../utils/utils.js";
+
+let showChatPacket = false;
+
+register("command", (...args) => {
+    let floorChat = null;
+    let masterChat = null;
+    let tierChat = null;
+    if (args === undefined) {
+        Settings.openGUI();
+        return;
+    }
+    const command = args[0].toLowerCase() || undefined;
+    const name = args[1];
+    let debugName = args[2];
+    if (command) {
+        floorChat = args[0].match(/f(\d)/i);
+        masterChat = args[0].match(/m(\d)/i);
+        tierChat = args[0].match(/t(\d)/i);
+    }
+
+    //ここらへん綺麗になった！おれてんさい！
+    if (floorChat || masterChat || tierChat) {
+        const doCommand = joinInstance(floorChat, masterChat, tierChat);
+        if (doCommand) {
+            ChatLib.command(doCommand);
+            return;
+        }
+    }
+
+    switch (command) {
+        case undefined:
+        case "setting":
+        case "settings":
+            Settings.openGUI();
+            break;
+        case "ver":
+        case "version":
+            ChatLib.chat(`${formatPrefix + spacing + aqua}You are currently on version ${yellow + version}`);
+            break;
+        case "help":
+            ChatLib.chat(`${formatPrefix + spacing + white}Ver ${green + version + reset} ${helps}`);
+            break;
+        case "blacklist":
+            if (!name) {
+                if (data.blacklist.name.length !== 0) {
+                    ChatLib.chat(`${formatPrefix + spacing + darkGray}blacklist${white}: ${data.blacklist.name.toString()}`);
+                } else {
+                    ChatLib.chat(`${formatPrefix + spacing + red}Use /bcc blacklist <name> to blacklist a player.`);
+                }
+                break;
+            }
+            lists(name, "blacklist");
+            break;
+        case "whitelist":
+            if (!name) {
+                if (data.whitelist.name.length !== 0) {
+                    ChatLib.chat(`${formatPrefix + spacing + white}Whitelist: ${data.whitelist.name.toString()}`);
+                } else {
+                    ChatLib.chat(`${formatPrefix + spacing + red}Use /bcc whitelist <name> to whitelist a player.`);
+                }
+                break;
+            }
+            lists(name, "whitelist");
+            break;
+        case "cute": {
+            const cuteNum = Math.floor(Math.random() * 6);
+            const cuteVids = cutes[cuteNum];
+            ChatLib.chat(`${green}Cute things are cute, that's why cute things are cute, and cute means cute, so cute is cute plus cute.${reset} \n${cuteVids}`);
+            break;
+        }
+        case "stop":
+            changeStopReady(true);
+            ChatLib.chat(`${formatPrefix} Rejoin Stoped`);
+            setTimeout(() => {
+                changeStopReady(false);
+            }, 5000);
+            break;
+        case "confirm":
+            if (name === "all") {
+                changeConfirm("all");
+            } else {
+                changeConfirm("confirm");
+            }
+            break;
+        case "update":
+            autoUpdate();
+            break;
+        case "debug":
+            if (!name) {
+                ChatLib.chat("no debugtype");
+            }
+            switch (name) {
+                case "firsttime":
+                    data.firstTime = false;
+                    data.save();
+                    ChatLib.chat("firsttime set to false");
+                    break;
+                case "getuuid":
+                    if (!debugName) {
+                        ChatLib.chat("no name");
+                        break;
+                    }
+                    debugName = debugName.toLowerCase();
+                    request({
+                        url: `https://api.mojang.com/users/profiles/minecraft/${debugName}`,
+                        json: true
+                    }).then((response) => {
+                        const getuuid = response.id;
+                        const getname = response.name;
+                        new TextComponent(`${getname}'s uuid: ${getuuid}`)
+                            .setClick("run_command", `/ct copy ${getuuid}`)
+                            .setHover("show_text", "§aClick to copy uuid")
+                            .chat()
+                    }).catch((e) => {
+                        ChatLib.chat(`${formatPrefix + spacing + red}Error: ${white}${JSON.parse(e).errorMessage}`);
+                    });
+                    break;
+                case "version":
+                    if (!debugName) {
+                        ChatLib.chat("no name");
+                        break;
+                    }
+                    data.lastVersion = debugName;
+                    data.save();
+                    ChatLib.chat("lastVersion changed");
+                    break;
+                case "resetprofile":
+                    data.profile.power = "nodata";
+                    data.profile.tuning = "nodata";
+                    data.profile.enrich = "nodata";
+                    data.profile.enrichAmount = 0;
+                    data.profile.mp = "nodata";
+                    data.save();
+                    ChatLib.chat("profileData reset")
+                    break;
+                case "canupdate":
+                    canUpdate = true;
+                    ChatLib.chat("canUpdate: true")
+                    break;
+                case "lookingat":
+                    ChatLib.chat(Player.lookingAt());
+                    break;
+                case "resetmayor":
+                    data.playtimes.mayor.playtime = 0;
+                    data.save();
+                    ChatLib.chat("mayorplaytime set to 0");
+                    break;
+                case "lookchat":
+                    showChatPacket = !showChatPacket;
+                    showChatPacket ? viewPacket.register() : viewPacket.unregister();
+                    showChatPacket ? ChatLib.chat("lookChat on") : ChatLib.chat("lookChat off");
+                    break;
+            }
+            break;
+        default:
+            ChatLib.chat(`${formatPrefix + spacing + white}Ver ${version} ${helps}`);
+    }
+}).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "afterinvite", "stop", "confirm", "update");
+
+
+const viewPacket = register("packetSent", (packet, event) => {
+    const message = packet.func_149439_c();
+    ChatLib.chat(message);
+}).setFilteredClass(C01PacketChatMessage).unregister();

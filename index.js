@@ -11,6 +11,7 @@ import "./features/command";
 import "./features/core";
 import "./features/autoUpdate";
 import "./features/autoRequeue";
+import "./features/afterInvite";
 
 import "./features/partyCommands/core/runCommand";
 import "./features/partyCommands/core/noPartyRunCommand";

@@ -7,6 +7,7 @@ import { changeConfirm } from "./partyCommands/invite.js";
 import { changeStopReady } from "./partyCommands/downtime.js";
 import { aqua, C01PacketChatMessage, darkGray, formatPrefix, green, red, reset, spacing, version, white, yellow } from "../utils/utils.js";
 import { requeueStop } from "./autoRequeue.js";
+import { resetInvite, setAfterInvite } from "./afterInvite.js";
 
 let showChatPacket = false;
 
@@ -94,8 +95,15 @@ register("command", (...args) => {
         case "update":
             autoUpdate();
             break;
-        case "stopRequeue":
+        case "stoprequeue":
             requeueStop();
+            break;
+        case "afterinvite":
+            if (name === "reset") {
+                resetInvite();
+                return;
+            }
+            setAfterInvite(name);
             break;
         case "debug":
             if (!name) {
@@ -167,8 +175,7 @@ register("command", (...args) => {
         default:
             ChatLib.chat(`${formatPrefix + spacing + white}Ver ${version} ${helps}`);
     }
-}).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "afterinvite", "stop", "confirm", "update");
-
+}).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "afterinvite", "stop", "stoprequeue", "confirm", "update");
 
 const viewPacket = register("packetSent", (packet, event) => {
     const message = packet.func_149439_c();

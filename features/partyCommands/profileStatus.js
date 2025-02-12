@@ -243,5 +243,5 @@ function setStatus(message) {
 let first = false;
 if (!first) {
     first = true;
-    packetChat.add("doFunc", setStatus);
+    packetChat.add(["doFunc"], setStatus);
 }

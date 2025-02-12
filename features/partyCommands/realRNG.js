@@ -303,7 +303,7 @@ let first = false;
 if (!first) {
     first = true;
     packetChat.add("doFunc", RNGReset);
-    packetChat.add(/^ *Team Score: (\d+) \(.+\)$/, addDungeonRNG);
+    packetChat.add(["match", /^ *Team Score: (\d+) \(.+\)$/], addDungeonRNG);
 }
 
 /*register("tick", () => {

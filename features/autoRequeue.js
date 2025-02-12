@@ -36,6 +36,6 @@ function autoRequeue() {
 let first = false;
 if (!first) {
     first = true;
-    packetChat.add(/ *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/, autoRequeue);
-    packetChat.add(/(?:\[.+\] )?\w+ left the party\./, requeueStop);
+    packetChat.add(["test", / *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/], autoRequeue);
+    packetChat.add(["test", /(?:\[.+\] )?\w+ left the party\./], requeueStop);
 }

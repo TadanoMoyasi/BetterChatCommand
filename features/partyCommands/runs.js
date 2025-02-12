@@ -37,8 +37,8 @@ const kuudraAssign = { ...sessionKuudraRuns };
 let first = false;
 if (!first) {
     first = true;
-    packetChat.add(/^ *KUUDRA DOWN!/, addSessionKuudraRuns);
-    packetChat.add(/^ *> EXTRA STATS </, addSessionDungeonRuns);
+    packetChat.add(["test", /^ *KUUDRA DOWN!/], addSessionKuudraRuns);
+    packetChat.add(["test", /^ *> EXTRA STATS </], addSessionDungeonRuns);
 }
 
 function addSessionKuudraRuns() {

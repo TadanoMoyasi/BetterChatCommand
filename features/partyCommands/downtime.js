@@ -124,7 +124,7 @@ export function changeStopReady(value) {
 let first = false;
 if (!first) {
     first = true;
-    packetChat.add(/ *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/, downTime);
-    packetChat.add(/\[NPC\] Mort: You should find it useful if you get lost\./, resetDungeonReady);
-    packetChat.add(/\[NPC\] Elle: Okay adventurers, I will go and fish up Kuudra!/, resetKuudraReady);
+    packetChat.add(["test", / *> EXTRA STATS <| *KUUDRA DOWN!| *DEFEAT/], downTime);
+    packetChat.add(["test", /\[NPC\] Mort: You should find it useful if you get lost\./], resetDungeonReady);
+    packetChat.add(["test", /\[NPC\] Elle: Okay adventurers, I will go and fish up Kuudra!/], resetKuudraReady);
 }

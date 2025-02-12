@@ -2,7 +2,7 @@ import Settings from "../../../config/general/generalConfig.js";
 import Party from "../../../utils/Class/party.js";
 import { data } from "../../../data/data.js";
 import { setDownTime, setPlayerReady } from "../downtime.js";
-import { formatPrefix, hasParty, red, spacing, white } from "../../../utils/utils.js";
+import { formatPrefix, hasParty, PartyCommandList, red, spacing, white } from "../../../utils/utils.js";
 import { joinInstance } from "../floor.js";
 import { handleInviteCommand, handleAllInviteCommand } from "../invite.js";
 import { handleFPSCommand, handlePingCommand, handleTPSCommand } from "../status.js";
@@ -98,7 +98,7 @@ function runCommand(player, message, chatFrom) {
         switch (parts[0]) {
             case "help":
                 if (!Settings.PartyHelp) return;
-                ChatLib.command("pc !help, !f(floor), !m(floor), !t(tier), !ptme, !warp, !wt, !inv (ign), !allinv, !promote (ign), !kick (ign), !dt (reason), !fps, !ping, !tps, !coords, !cf, !dice, !rng, !boop (ign), !rps (ign), !meow (ign), !cute, !time, !playtime, !runs (dungeon/kuudra), !iq");
+                ChatLib.command(`pc ${PartyCommandList}`);
                 break;
             // ■■■■■■■■■■■■■■■■■■■■■■■■■■■ leader ■■■■■■■■■■■■■■■■■■■■■■■■■■■
             case "ptme":

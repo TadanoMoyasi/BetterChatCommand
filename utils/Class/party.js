@@ -1,5 +1,3 @@
-import { getBloomCoreExists } from "../../features/core";
-
 const partySpamMessages = [
     /.+ has disbanded the party!/,
     /(.+) invited (.+) to the party! They have 60 seconds to accept./,
@@ -8,7 +6,6 @@ const partySpamMessages = [
 ]
 
 let hidingPartySpam = false;
-let bloomCoreExists = null;
 
 const hidePartySpam = (ms) => {
     hidingPartySpam = true;
@@ -24,6 +21,8 @@ register("chat", (event) => {
 })
 
 const stripRank = (rankedPlayer) => rankedPlayer.replace(/\[[\w+\+-]+] /, "").trim();
+
+let bloomCoreExists = null;
 
 export default new class Party {
     constructor() {
@@ -96,7 +95,7 @@ export default new class Party {
             if (unformatted === "Party Finder > Your party has been queued in the dungeon finder!") {
                 setTimeout(() => {
                     this.isParty = true;
-                    if (bloomCoreExists == null) bloomCoreExists = getBloomCoreExists();
+                    if (bloomCoreExists == null) bloomCoreExists = FileLib.exists("bloomCore", "Party.js");
                     if (bloomCoreExists) return;
                     hidePartySpam(1000);
                     ChatLib.command("pl");
@@ -115,7 +114,7 @@ export default new class Party {
             if (/&eYou have joined &r.+'s &r&eparty!&r/.test(formatted)) {
                 setTimeout(() => {
                     this.isParty = true;
-                    if (bloomCoreExists == null) bloomCoreExists = getBloomCoreExists();
+                    if (bloomCoreExists == null) bloomCoreExists = FileLib.exists("bloomCore", "Party.js");
                     if (bloomCoreExists) return;
                     hidePartySpam(750);
                     ChatLib.command("pl");
@@ -153,5 +152,4 @@ export default new class Party {
         this.isParty = false;
     }
 }
-
 //from bloomCore

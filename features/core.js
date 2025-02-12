@@ -5,12 +5,8 @@ import { getSessionDungeonRuns, getSessionKuudraRuns, resetRuns, setRuns } from 
 
 let cantAutoUpdate = false;
 let canUpdate = false;
-let bloomCoreExists = false;
-
 
 export function getCanUpdate() { return canUpdate };
-
-export function getBloomCoreExists() { return bloomCoreExists };
 
 const firstCheck = register("tick", () => {
     firstCheck.unregister();
@@ -25,7 +21,6 @@ const firstCheck = register("tick", () => {
         data.firstTime = true;
         first = true;
     }
-    bloomCoreExists = FileLib.exists("bloomCore", "Party.js");
     sessionJoinTime = Date.now();
     if (data.playtimes.joinTime === 1 || data.playtimes.leftTime === 1) {
         data.joinTime = Date.now();

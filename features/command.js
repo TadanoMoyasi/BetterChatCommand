@@ -5,7 +5,7 @@ import { lists } from "./partyCommands/lists.js";
 import { joinInstance } from "./partyCommands/floor.js";
 import { changeConfirm } from "./partyCommands/invite.js";
 import { changeStopReady } from "./partyCommands/downtime.js";
-import { aqua, C01PacketChatMessage, darkGray, formatPrefix, green, red, reset, spacing, version, white, yellow } from "../utils/utils.js";
+import { aqua, C01PacketChatMessage, cutes, darkGray, formatPrefix, green, helpText, partyCommandHelpText, red, reset, version, white, yellow } from "../utils/utils.js";
 import { requeueStop } from "./autoRequeue.js";
 import { resetInvite, setAfterInvite } from "./afterInvite.js";
 
@@ -45,17 +45,17 @@ register("command", (...args) => {
             break;
         case "ver":
         case "version":
-            ChatLib.chat(`${formatPrefix + spacing + aqua}You are currently on version ${yellow + version}`);
+            ChatLib.chat(`${formatPrefix + aqua} You are currently on version ${yellow + version}`);
             break;
         case "help":
-            ChatLib.chat(`${formatPrefix + spacing + white}Ver ${green + version + reset} ${helps}`);
+            name === "party" ? ChatLib.chat(partyCommandHelpText) : ChatLib.chat(helpText);
             break;
         case "blacklist":
             if (!name) {
                 if (data.blacklist.name.length !== 0) {
-                    ChatLib.chat(`${formatPrefix + spacing + darkGray}blacklist${white}: ${data.blacklist.name.toString()}`);
+                    ChatLib.chat(`${formatPrefix + darkGray} blacklist${white}: ${data.blacklist.name.toString()}`);
                 } else {
-                    ChatLib.chat(`${formatPrefix + spacing + red}Use /bcc blacklist <name> to blacklist a player.`);
+                    ChatLib.chat(`${formatPrefix + red} Use /bcc blacklist <name> to blacklist a player.`);
                 }
                 break;
             }
@@ -64,9 +64,9 @@ register("command", (...args) => {
         case "whitelist":
             if (!name) {
                 if (data.whitelist.name.length !== 0) {
-                    ChatLib.chat(`${formatPrefix + spacing + white}Whitelist: ${data.whitelist.name.toString()}`);
+                    ChatLib.chat(`${formatPrefix + white} Whitelist: ${data.whitelist.name.toString()}`);
                 } else {
-                    ChatLib.chat(`${formatPrefix + spacing + red}Use /bcc whitelist <name> to whitelist a player.`);
+                    ChatLib.chat(`${formatPrefix + + red} Use /bcc whitelist <name> to whitelist a player.`);
                 }
                 break;
             }
@@ -125,14 +125,14 @@ register("command", (...args) => {
                         url: `https://api.mojang.com/users/profiles/minecraft/${debugName}`,
                         json: true
                     }).then((response) => {
-                        const getuuid = response.id;
-                        const getname = response.name;
-                        new TextComponent(`${getname}'s uuid: ${getuuid}`)
-                            .setClick("run_command", `/ct copy ${getuuid}`)
-                            .setHover("show_text", "§aClick to copy uuid")
+                        const uuid = response.id;
+                        const name = response.name;
+                        new TextComponent(`${name}'s uuid: ${uuid}`)
+                            .setClick("run_command", `/ct copy ${uuid}`)
+                            .setHover("show_text", `${green}Click to copy uuid`)
                             .chat()
                     }).catch((e) => {
-                        ChatLib.chat(`${formatPrefix + spacing + red}Error: ${white}${JSON.parse(e).errorMessage}`);
+                        ChatLib.chat(`${formatPrefix + red} Error: ${white}${JSON.parse(e).errorMessage}`);
                     });
                     break;
                 case "version":
@@ -173,7 +173,7 @@ register("command", (...args) => {
             }
             break;
         default:
-            ChatLib.chat(`${formatPrefix + spacing + white}Ver ${version} ${helps}`);
+            ChatLib.chat(`${formatPrefix + white} Ver ${version} ${helps}`);
     }
 }).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "afterinvite", "stop", "stoprequeue", "confirm", "update");
 

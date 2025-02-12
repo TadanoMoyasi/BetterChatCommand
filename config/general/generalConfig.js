@@ -1,4 +1,3 @@
-import { Options } from "discord.js";
 import {
     @ButtonProperty,
     @CheckboxProperty,
@@ -61,11 +60,11 @@ class Settings {
     })
     noPartyCommand = false;
 
-    @SwitchProperty ({
-    name: "auto Requeue",
-    description: "auto Requeue in Dungeon, Kuudra",
-    category: "General",
-    subcategory: "Requeue"
+    @SwitchProperty({
+        name: "auto Requeue",
+        description: "auto Requeue in Dungeon, Kuudra",
+        category: "General",
+        subcategory: "Requeue"
     })
     autoRequeueToggle = false;
 

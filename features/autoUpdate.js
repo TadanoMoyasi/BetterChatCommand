@@ -1,8 +1,7 @@
+import request from "requestV2/index.js";
 import { File, formatPrefix, spacing, red, green } from "../utils/utils.js";
 import { unloadFunction, getCanUpdate } from "./core.js";
 import { socketFactory } from "../utils/letsEncryptCerts.js";
-import request from "requestV2/index";
-
 
 let updating = false;
 const configFilePaths = [];

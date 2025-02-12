@@ -1,6 +1,6 @@
 import Settings from "../../../config/general/generalConfig.js";
-import { avoidSlowDown } from "./runCommand.js";
 import Party from "../../../utils/Class/party.js";
+import { avoidSlowDown } from "./runCommand.js";
 const C01PacketChatMessage = Java.type("net.minecraft.network.play.client.C01PacketChatMessage");
 
 register("packetSent", (packet, event) => {

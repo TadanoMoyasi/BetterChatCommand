@@ -1,4 +1,4 @@
-import { S37PacketStatistics, S03PacketTimeUpdate, System, C16PacketClientStatus, hasParty } from "../../utils/utils";
+import { S37PacketStatistics, S03PacketTimeUpdate, System, C16PacketClientStatus, hasParty } from "../../utils/utils.js";
 
 let lastPingAt = -1;
 let requestedPing = false;

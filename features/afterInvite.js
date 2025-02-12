@@ -1,5 +1,5 @@
-import packetChat from "../utils/Class/packetChat";
-import { formatPrefix } from "../utils/utils";
+import packetChat from "../utils/Class/packetChat.js";
+import { formatPrefix } from "../utils/utils.js";
 
 const inviteList = [];
 

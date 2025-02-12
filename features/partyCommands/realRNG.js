@@ -1,5 +1,5 @@
-import { data } from "../../data/data.js";
 import packetChat from "../../utils/Class/packetChat.js";
+import { data } from "../../data/data.js";
 import { getNowFloor } from "../../utils/joinFloor.js";
 import { hasParty } from "../../utils/utils.js";
 

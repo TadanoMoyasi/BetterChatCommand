@@ -1,5 +1,5 @@
-import { data } from "../../data/data";
-import { formatSeconds, hasParty } from "../../utils/utils";
+import { data } from "../../data/data.js";
+import { formatSeconds, hasParty } from "../../utils/utils.js";
 
 register("chat", (hour, minutes) => {
     if (!Settings.AllCommandToggle) return;

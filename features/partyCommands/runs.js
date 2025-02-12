@@ -1,6 +1,6 @@
-import { data } from "../../data/data";
-import packetChat from "../../utils/Class/packetChat";
-import { getNowFloor, getNowTier } from "../../utils/joinFloor";
+import packetChat from "../../utils/Class/packetChat.js";
+import { data } from "../../data/data.js";
+import { getNowFloor, getNowTier } from "../../utils/joinFloor.js";
 
 const sessionDungeonRuns = {
     All: 0,

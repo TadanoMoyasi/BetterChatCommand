@@ -1,19 +1,17 @@
-import request from "requestV2/index";
-import { data } from "../../data/data";
-import { formatPrefix, green, red, spacing, white } from "../../utils/utils";
+import request from "requestV2/index.js";
+import { data } from "../../data/data.js";
+import { formatPrefix, green, red, spacing, white } from "../../utils/utils.js";
 
 //https://api.mojang.com/users/profiles/minecraft/tdmy
 export function lists(listsPlayer, witchFrom) {
     const lowerCaseListsPlayer = listsPlayer.toLowerCase();
     const apiURL = `https://api.mojang.com/users/profiles/minecraft/${lowerCaseListsPlayer}`;
     if (witchFrom === "blacklist" || witchFrom === "whitelist") {
-        handleRequest(apiURL, witchFrom);
-    } else {
-        ChatLib.chat(`${formatPrefix + spacing + red}Error: ${white}Invalid list type.`);
+        handleRequest(apiURL, witchFrom, lowerCaseListsPlayer);
     }
 }
 
-function handleRequest(apiURL, listType) {
+function handleRequest(apiURL, listType, lowerCaseListsPlayer) {
     request({
         url: apiURL,
         json: true
@@ -32,6 +30,6 @@ function handleRequest(apiURL, listType) {
         }
         data.save();
     }).catch((e) => {
-        ChatLib.chat(`${formatPrefix + spacing + red}Error: ${white}${JSON.parse(e).errorMessage}`);
+        ChatLib.chat(`${formatPrefix + red} Error: ${white}${JSON.parse(e).errorMessage}`);
     });
 }

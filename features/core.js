@@ -1,7 +1,7 @@
 import request from "requestV2/index";
 import { data } from "../data/data.js";
 import { version, formatPrefix, darkAqua, green, red, bold, aqua, strikeThrough, spacing } from "../utils/utils.js";
-import { getSessionDungeonRuns, getSessionKuudraRuns, resetRuns, setRuns } from "./partyCommands/runs.js";
+import { getRuns, resetRuns, setRuns } from "./partyCommands/runs.js";
 
 let cantAutoUpdate = false;
 let canUpdate = false;
@@ -90,8 +90,8 @@ register("gameUnload", () => {
 });
 
 export function unloadFunction() {
-    data.todayData.dungeon = getSessionDungeonRuns();
-    data.todayData.kuudra = getSessionKuudraRuns();
+    data.todayData.dungeon = getRuns("Dungeon");
+    data.todayData.kuudra = getRuns("Kuudra");
     data.playtimes.leftTime = Date.now();
     data.playtimes.mayor.playtime += Number(((Date.now() - sessionJoinTime) / 1000).toFixed());
     data.save();

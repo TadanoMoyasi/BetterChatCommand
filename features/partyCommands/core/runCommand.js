@@ -8,7 +8,7 @@ import { handleInviteCommand, handleAllInviteCommand } from "../invite.js";
 import { handleFPSCommand, handlePingCommand, handleTPSCommand } from "../status.js";
 import { handleRealRNGCommand } from "../realRNG.js";
 import { sendIQMessage } from "../iq.js";
-import { getSessionDungeonRuns, getSessionKuudraRuns } from "../runs.js";
+import { sessionFilter } from "../runs.js";
 import { sendPlaytime } from "../playtime.js";
 
 let lastTimeUsed = 0;
@@ -309,9 +309,10 @@ function runCommand(player, message, chatFrom) {
             case "runs":
                 if (!Settings.PartyRuns || chatFrom === "dm") return;
                 handleCommandExecution(lowerCasePlayerName, () => {
-                    const runType = parts[1] || "dungeon";
-                    if (runType === "kuudra") hasParty(chatFrom, `Today Kuudra Runs: ${getSessionKuudraRuns()}`);
-                    else if (runType === "dungeon" || runType === "dungeons" || runType === "catacombs") hasParty(chatFrom, `Today Dungeon Runs: ${getSessionDungeonRuns()}`);
+                    const runType = parts[1];
+                    const result = sessionFilter(runType);
+                    if (!result) return;
+                    hasParty(chatFrom, `Session${result[0]}Runs: ${result[1]}`);
                 });
                 break;
             case "iq":

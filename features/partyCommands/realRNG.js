@@ -5,6 +5,60 @@ import { hasParty } from "../../utils/utils.js";
 
 const rngValue = JSON.parse(FileLib.read("BetterChatCommand", "data/RNGValues.json"));
 
+const slayerMapping = {
+    zombie: { slayer: "Zombie", prefix: "ZombieRNG" },
+    revenant: { slayer: "Zombie", prefix: "ZombieRNG" },
+    zsl: { slayer: "Zombie", prefix: "ZombieRNG" },
+    spider: { slayer: "Spider", prefix: "SpiderRNG" },
+    tarantula: { slayer: "Spider", prefix: "SpiderRNG" },
+    packmaster: { slayer: "Wolf", prefix: "WolfRNG" },
+    pack: { slayer: "Wolf", prefix: "WolfRNG" },
+    wolf: { slayer: "Wolf", prefix: "WolfRNG" },
+    sven: { slayer: "Wolf", prefix: "WolfRNG" },
+    wsl: { slayer: "Wolf", prefix: "WolfRNG" },
+    enderman: { slayer: "Enderman", prefix: "EndermanRNG" },
+    end: { slayer: "Enderman", prefix: "EndermanRNG" },
+    void: { slayer: "Enderman", prefix: "EndermanRNG" },
+    voidgloom: { slayer: "Enderman", prefix: "EndermanRNG" },
+    seraph: { slayer: "Enderman", prefix: "EndermanRNG" },
+    esl: { slayer: "Enderman", prefix: "EndermanRNG" },
+    vampire: { slayer: "Vampire", prefix: "VampireRNG" },
+    vamp: { slayer: "Vampire", prefix: "VampireRNG" },
+    rift: { slayer: "Vampire", prefix: "VampireRNG" },
+    vsl: { slayer: "Vampire", prefix: "VampireRNG" },
+    blaze: { slayer: "Blaze", prefix: "BlazeRNG" },
+    inferno: { slayer: "Blaze", prefix: "BlazeRNG" },
+    demonlord: { slayer: "Blaze", prefix: "BlazeRNG" },
+    bsl: { slayer: "Blaze", prefix: "BlazeRNG" }
+};
+
+const dungeonMapping = {
+    f1: { type: "Normal", floor: "F1", prefix: "F1RNG" },
+    f2: { type: "Normal", floor: "F2", prefix: "F2RNG" },
+    f3: { type: "Normal", floor: "F3", prefix: "F3RNG" },
+    f4: { type: "Normal", floor: "F4", prefix: "F4RNG" },
+    f5: { type: "Normal", floor: "F5", prefix: "F5RNG" },
+    f6: { type: "Normal", floor: "F6", prefix: "F6RNG" },
+    f7: { type: "Normal", floor: "F7", prefix: "F7RNG" },
+    m1: { type: "Master", floor: "M1", prefix: "M1RNG" },
+    m2: { type: "Master", floor: "M2", prefix: "M2RNG" },
+    m3: { type: "Master", floor: "M3", prefix: "M3RNG" },
+    m4: { type: "Master", floor: "M4", prefix: "M4RNG" },
+    m5: { type: "Master", floor: "M5", prefix: "M5RNG" },
+    m6: { type: "Master", floor: "M6", prefix: "M6RNG" },
+    m7: { type: "Master", floor: "M7", prefix: "M7RNG" },
+};
+
+const rngMapping = {
+    nucleus: { type: null, prefix: "NucleusRNG" },
+    crystal: { type: null, prefix: "NucleusRNG" },
+    cn: { type: null, prefix: "NucleusRNG" },
+    experiment: { type: true, prefix: "ExperimentRNG" },
+    table: { type: true, prefix: "ExperimentRNG" },
+    enchant: { type: true, prefix: "ExperimentRNG" },
+    enchanting: { type: true, prefix: "ExperimentRNG" }
+}
+
 /**
  * @param {string} meterType Nucleus, Dungeon, Slayer
  * @param {string|null} typeDetail Normal, Master, SlayerType
@@ -30,59 +84,6 @@ export function handleRealRNGCommand(parts, chatFrom) {
     const rngSlayer = data.RNG.Slayer;
     const catacombsNormal = data.RNG.Catacombs.Normal;
     const catacombsMaster = data.RNG.Catacombs.Master;
-    const slayerMapping = {
-        zombie: { slayer: "Zombie", prefix: "ZombieRNG" },
-        revenant: { slayer: "Zombie", prefix: "ZombieRNG" },
-        zsl: { slayer: "Zombie", prefix: "ZombieRNG" },
-        spider: { slayer: "Spider", prefix: "SpiderRNG" },
-        tarantula: { slayer: "Spider", prefix: "SpiderRNG" },
-        packmaster: { slayer: "Wolf", prefix: "WolfRNG" },
-        pack: { slayer: "Wolf", prefix: "WolfRNG" },
-        wolf: { slayer: "Wolf", prefix: "WolfRNG" },
-        sven: { slayer: "Wolf", prefix: "WolfRNG" },
-        wsl: { slayer: "Wolf", prefix: "WolfRNG" },
-        enderman: { slayer: "Enderman", prefix: "EndermanRNG" },
-        end: { slayer: "Enderman", prefix: "EndermanRNG" },
-        void: { slayer: "Enderman", prefix: "EndermanRNG" },
-        voidgloom: { slayer: "Enderman", prefix: "EndermanRNG" },
-        seraph: { slayer: "Enderman", prefix: "EndermanRNG" },
-        esl: { slayer: "Enderman", prefix: "EndermanRNG" },
-        vampire: { slayer: "Vampire", prefix: "VampireRNG" },
-        vamp: { slayer: "Vampire", prefix: "VampireRNG" },
-        rift: { slayer: "Vampire", prefix: "VampireRNG" },
-        vsl: { slayer: "Vampire", prefix: "VampireRNG" },
-        blaze: { slayer: "Blaze", prefix: "BlazeRNG" },
-        inferno: { slayer: "Blaze", prefix: "BlazeRNG" },
-        demonlord: { slayer: "Blaze", prefix: "BlazeRNG" },
-        bsl: { slayer: "Blaze", prefix: "BlazeRNG" }
-    };
-
-    const dungeonMapping = {
-        f1: { type: "Normal", floor: "F1", prefix: "F1RNG" },
-        f2: { type: "Normal", floor: "F2", prefix: "F2RNG" },
-        f3: { type: "Normal", floor: "F3", prefix: "F3RNG" },
-        f4: { type: "Normal", floor: "F4", prefix: "F4RNG" },
-        f5: { type: "Normal", floor: "F5", prefix: "F5RNG" },
-        f6: { type: "Normal", floor: "F6", prefix: "F6RNG" },
-        f7: { type: "Normal", floor: "F7", prefix: "F7RNG" },
-        m1: { type: "Master", floor: "M1", prefix: "M1RNG" },
-        m2: { type: "Master", floor: "M2", prefix: "M2RNG" },
-        m3: { type: "Master", floor: "M3", prefix: "M3RNG" },
-        m4: { type: "Master", floor: "M4", prefix: "M4RNG" },
-        m5: { type: "Master", floor: "M5", prefix: "M5RNG" },
-        m6: { type: "Master", floor: "M6", prefix: "M6RNG" },
-        m7: { type: "Master", floor: "M7", prefix: "M7RNG" },
-    };
-
-    const rngMapping = {
-        nucleus: { type: null, prefix: "NucleusRNG" },
-        crystal: { type: null, prefix: "NucleusRNG" },
-        cn: { type: null, prefix: "NucleusRNG" },
-        experiment: { type: true, prefix: "ExperimentRNG" },
-        table: { type: true, prefix: "ExperimentRNG" },
-        enchant: { type: true, prefix: "ExperimentRNG" },
-        enchanting: { type: true, prefix: "ExperimentRNG" }
-    }
 
     if (rngType === "help") {
         hasParty(chatFrom, "rrng <rngtype>");
@@ -279,10 +280,10 @@ let rngAdded = false;
 register("worldUnload", () => {
     rngAdded = false;
 })
-function addDungeonRNG(score) {
+function addDungeonRNG(match) {
     if (rngAdded) return;
     rngAdded = true;
-    const numScore = Number(score);
+    const numScore = Number(match[1]);
     let addScore = 0;
     if (numScore < 270) return;
     if (numScore >= 270 && numScore < 300) {
@@ -292,10 +293,10 @@ function addDungeonRNG(score) {
     }
     const floor = getNowFloor();
     const CatacombsType = floor.includes("M") ? "Master" : "Normal";
-    if (typeof data.RNG.Catacombs[CatacombsType][floor][1] === "string") {
-        data.RNG.Catacombs[CatacombsType][floor][1] = Number(data.RNG.Catacombs[rngCatacombsType][rngFloor][1]);
+    if (typeof data.RNG.Catacombs[CatacombsType][floor].xp === "string") {
+        data.RNG.Catacombs[CatacombsType][floor].xp = Number(data.RNG.Catacombs[CatacombsType][floor].xp);
     }
-    data.RNG.Catacombs[CatacombsType][floor][1] += addScore;
+    data.RNG.Catacombs[CatacombsType][floor].xp += addScore;
     data.save();
 }
 
@@ -305,131 +306,3 @@ if (!first) {
     packetChat.add("doFunc", RNGReset);
     packetChat.add(["match", /^ *Team Score: (\d+) \(.+\)$/], addDungeonRNG);
 }
-
-/*register("tick", () => {
-    const inv = Player.getContainer();
-    if (scanned || !inv || !inv.getName().includes("RNG Meter")) return;
-    scanned = true;
-    Client.scheduleTask(4, () => {
-        const items = inv.getItems();
-        if (inv.getName().includes("Slayer RNG Meter")) {
-            const slayerType = ["Zombie", "Spider", "Wolf", "", "Enderman", "Vampire", "Blaze"];
-            let slayerScanned = 0;
-            //To improve operating speed. Creating a local variable nearby will make the reference faster than referencing the global variable every time.
-            const rngSlayer = data.RNG.Slayer;
-            items.slice(19, 26).forEach(item => {
-                const lore = item?.getLore();
-                if (!lore) {
-                    slayerScanned++;
-                    return;
-                }
-                let scanLine = 0;
-                const slayer = slayerType[slayerScanned];
-                for (let line of lore) {
-                    scanLine--;
-                    line = ChatLib.removeFormatting(line);
-                    if (line.toString()?.includes("Selected Drop")) {
-                        scanLine = 2;
-                    } else if (line.endsWith("k") || line.endsWith("M")) {
-                        rngSlayer[slayer][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
-                    } else if (line.toString()?.includes("Stored Slayer XP:")) {
-                        rngSlayer[slayer][0] = "unSelected";
-                        rngSlayer[slayer][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
-                    }
-                    if (scanLine === 1) {
-                        rngSlayer[slayer][0] = line.substring(0); //こーれ天才です。任せてください。
-                    }
-                }
-                slayerScanned++;
-            })
-            data.save();
-        } else if (inv.getName().includes("Catacombs RNG Meter")) {
-            let catacombsFloor = 1;
-            let catacombsType = "Normal";
-            items.slice(19, 35).forEach(item => {
-                const lore = item?.getLore();
-                let scanLine = 0;
-                const rngCatacombs = data.RNG.Catacombs;
-                for (let line of lore) {
-                    scanLine--;
-                    line = ChatLib.removeFormatting(line);
-                    if (line.toString()?.includes("M1")) {
-                        catacombsType = "Master";
-                        catacombsFloor = 1;
-                    } else if (line.toString()?.includes("Selected Drop")) {
-                        scanLine = 2;
-                    } else if (line.endsWith("k")) {
-                        if (catacombsType === "Normal") {
-                            const normalFloor = `F${catacombsFloor}`;
-                            rngCatacombs[catacombsType][normalFloor][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
-                        } else if (catacombsType === "Master") {
-                            const masterFloor = `M${catacombsFloor}`;
-                            rngCatacombs[catacombsType][masterFloor][1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""));
-                        }
-                    } else if (line.toString()?.includes("Stored Dungeon Score:")) {
-                        if (catacombsType === "Normal") {
-                            const normalFloor = `F${catacombsFloor}`;
-                            rngCatacombs[catacombsType][normalFloor][0] = "unSelected";
-                            rngCatacombs[catacombsType][normalFloor][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
-                        } else if (catacombsType === "Master") {
-                            const masterFloor = `M${catacombsFloor}`;
-                            rngCatacombs[catacombsType][masterFloor][0] = "unSelected";
-                            rngCatacombs[catacombsType][masterFloor][1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
-                        }
-                    }
-                    if (scanLine === 1) {
-                        if (catacombsType === "Normal") {
-                            const normalFloor = `F${catacombsFloor}`;
-                            rngCatacombs[catacombsType][normalFloor][0] = line.substring(0);
-                        } else if (catacombsType === "Master") {
-                            const masterFloor = `M${catacombsFloor}`;
-                            rngCatacombs[catacombsType][masterFloor][0] = line.substring(0);
-                        }
-                    }
-                }
-                catacombsFloor++;
-            })
-            data.save();
-        } else if (inv.getName().includes("Crystal Nucleus RNG Meter")) {
-            const lore = inv.getStackInSlot(4).getLore();
-            let scanLine = 0;
-            const rngNucleus = data.RNG.Nucleus;
-            for (let line of lore) {
-                scanLine--;
-                line = ChatLib.removeFormatting(line);
-                if (line.toString()?.includes("Selected Drop")) {
-                    scanLine = 2;
-                } else if (line.endsWith("k") || line.endsWith("M")) {
-                    rngNucleus[1] = Number(line.substring(26, line.indexOf("/").replace(/,/g, "")))
-                } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    rngNucleus[0] = "unSelected";
-                    rngNucleus[1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
-                }
-                if (scanLine === 1) {
-                    rngNucleus[0] = line.substring(0);
-                }
-            }
-            data.save();
-        } else {
-            const lore = inv.getStackInSlot(15).getLore();
-            let scanLine = 0;
-            const rngNucleus = data.RNG.Nucleus;
-            for (let line of lore) {
-                scanLine--;
-                line = ChatLib.removeFormatting(line);
-                if (line.toString()?.includes("Selected Drop")) {
-                    scanLine = 2;
-                } else if (line.endsWith("k") || line.endsWith("M")) {
-                    rngNucleus[1] = Number(line.substring(26, line.indexOf("/")).replace(/,/g, ""))
-                } else if (line.toString()?.includes("Stored Nucleus XP:")) {
-                    rngNucleus[0] = "unSelected";
-                    rngNucleus[1] = Number(line.substring(line.indexOf(":") + 2).replace(/,/g, ""));
-                }
-                if (scanLine === 1) {
-                    rngNucleus[0] = line.substring(0);
-                }
-            }
-            data.save();
-        }
-    })
-})*/

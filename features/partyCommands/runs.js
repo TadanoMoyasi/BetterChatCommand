@@ -117,8 +117,8 @@ function getSessionDungeonRuns(type) {
 }
 
 export function sessionFilter(type) {
+    if (!Object.keys(runsMapping).includes(type)) return null;
     const { prefix, witch } = runsMapping[type];
-    if (prefix === undefined) return null;
     if (witch === sessionDungeonRuns) return [prefix, getSessionDungeonRuns(prefix)];
     return [prefix, getSessionKuudraRuns(prefix)]
 }

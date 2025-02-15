@@ -1,5 +1,6 @@
 import { data } from "../../data/data.js";
 import { formatSeconds, hasParty } from "../../utils/utils.js";
+import { getSessionJoinTime } from "../core.js";
 
 register("chat", (hour, minutes) => {
     if (!Settings.AllCommandToggle) return;
@@ -57,21 +58,21 @@ export function sendPlaytime(timeType, chatFrom) {
         case null:
         case undefined:
         case "day": {
-            const playTimeToday = formatSeconds(((Date.now() - data.jointime) / 1000).toFixed());
+            const playTimeToday = formatSeconds(((Date.now() - data.playtimes.joinTime) / 1000).toFixed());
             hasParty(chatFrom, `Today Playtime: ${playTimeToday}`);
             break;
         }
         case "mayor": {
             const mayorPlayTime = data.playtimes.mayor.playtime;
-            const sessionPlayTime = ((Date.now() - sessionJoinTime) / 1000).toFixed();
-            const addupPlayTime = Number(mayorPlayTime) + Number(sessionPlayTime);
-            const formatMayorPlayTime = formatSeconds(addupPlayTime);
+            const sessionPlayTime = ((Date.now() - getSessionJoinTime()) / 1000).toFixed();
+            const addUpPlayTime = Number(mayorPlayTime) + Number(sessionPlayTime);
+            const formatMayorPlayTime = formatSeconds(addUpPlayTime);
             hasParty(chatFrom, `Mayor Playtime: ${formatMayorPlayTime}`);
             break;
         }
         case "all":
         case "alltime":
-            hasParty(chatFrom, `Alltime Playtime: ${data.playtimes.all}`);
+            hasParty(chatFrom, `AllTime Playtime: ${data.playtimes.all}`);
             break;
         case "crim":
         case "crimson":

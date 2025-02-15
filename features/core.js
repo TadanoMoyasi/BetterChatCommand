@@ -7,6 +7,7 @@ let cantAutoUpdate = false;
 let canUpdate = false;
 
 export function getCanUpdate() { return canUpdate };
+export function getSessionJoinTime() { return sessionJoinTime }
 
 const firstCheck = register("tick", () => {
     firstCheck.unregister();

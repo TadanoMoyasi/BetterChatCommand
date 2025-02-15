@@ -279,7 +279,7 @@ let rngAdded = false;
 register("worldUnload", () => {
     rngAdded = false;
 })
-function addDungeonRNG() {
+function addDungeonRNG(score) {
     if (rngAdded) return;
     rngAdded = true;
     const numScore = Number(score);

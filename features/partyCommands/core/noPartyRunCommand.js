@@ -9,6 +9,5 @@ register("packetSent", (packet, event) => {
     const match = packetMessage.match(/^!.+/);
     if (!match) return;
     cancel(event);
-    ChatLib.chat("cancel");
     avoidSlowDown(Player.getName(), packetMessage.replace(/!/, ""), "noParty");
 }).setFilteredClass(C01PacketChatMessage);

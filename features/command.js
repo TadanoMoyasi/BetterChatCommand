@@ -173,7 +173,7 @@ register("command", (...args) => {
             }
             break;
         default:
-            ChatLib.chat(`${formatPrefix + white} Ver ${version} ${helps}`);
+            ChatLib.chat(`${formatPrefix + white} Ver ${version}. /bcc to open settings`);
     }
 }).setCommandName("betterchatcommand").setAliases("bcc").setTabCompletions("version", "help", "blacklist", "whitelist", "cute", "afterinvite", "stop", "stoprequeue", "confirm", "update");
 

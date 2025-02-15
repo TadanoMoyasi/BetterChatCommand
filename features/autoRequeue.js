@@ -1,5 +1,6 @@
 import Settings from "../config/general/generalConfig.js"
 import packetChat from "../utils/Class/packetChat.js";
+import Party from "../utils/Class/party.js";
 import { getJoinFloor } from "../utils/joinFloor.js";
 import { formatPrefix, green } from "../utils/utils.js";
 let stopRequeue = false;

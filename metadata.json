@@ -1,7 +1,7 @@
 {
-	"$schema": "../CTAutocomplete/schema.json",
+	"$schema": "../../CTAutocomplete/schema.json",
 	"name": "BetterChatCommand",
-	"description": "Can toggle all chatcommands. /bcc",
+	"description": "Better. /bcc",
 	"author": "TadanoMoyasi",
 	"entry": "index.js",
 	"version": "2.0.0",

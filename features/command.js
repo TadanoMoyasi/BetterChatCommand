@@ -10,6 +10,7 @@ import { requeueStop } from "./autoRequeue.js";
 import { resetInvite, setAfterInvite } from "./afterInvite.js";
 
 let showChatPacket = false;
+const showSlotId = false;
 
 register("command", (...args) => {
     let floorChat = null;
@@ -130,7 +131,7 @@ register("command", (...args) => {
                         new TextComponent(`${name}'s uuid: ${uuid}`)
                             .setClick("run_command", `/ct copy ${uuid}`)
                             .setHover("show_text", `${green}Click to copy uuid`)
-                            .chat()
+                            .chat();
                     }).catch((e) => {
                         ChatLib.chat(`${formatPrefix + red} Error: ${white}${JSON.parse(e).errorMessage}`);
                     });
@@ -151,11 +152,11 @@ register("command", (...args) => {
                     data.profile.enrichAmount = 0;
                     data.profile.mp = "nodata";
                     data.save();
-                    ChatLib.chat("profileData reset")
+                    ChatLib.chat("profileData reset");
                     break;
                 case "canupdate":
                     canUpdate = true;
-                    ChatLib.chat("canUpdate: true")
+                    ChatLib.chat("canUpdate: true");
                     break;
                 case "lookingat":
                     ChatLib.chat(Player.lookingAt());
@@ -170,6 +171,83 @@ register("command", (...args) => {
                     showChatPacket ? viewPacket.register() : viewPacket.unregister();
                     showChatPacket ? ChatLib.chat("lookChat on") : ChatLib.chat("lookChat off");
                     break;
+                case "hold": {
+                    if (Player.getContainer()) {
+                        setTimeout(() => {
+                            const inv = Player.getContainer();
+                            const under = Client.currentGui.getSlotUnderMouse();
+                            if (!under) return;
+                            const index = under.getIndex();
+                            const item = inv.getStackInSlot(index).getName();
+                            debugName === "format" ? console.log(item) : console.log(ChatLib.removeFormatting(item));
+                            return;
+                        }, 3000);
+                    }
+                    const item = Player.getHeldItem().getName();
+                    debugName === "format" ? console.log(item) : console.log(ChatLib.removeFormatting(item));
+                    break;
+                }
+                case "lore": {
+                    if (Player.getContainer()) {
+                        setTimeout(() => {
+                            const inv = Player.getContainer();
+                            const under = Client.currentGui.getSlotUnderMouse();
+                            if (!under) return;
+                            const index = under.getIndex();
+                            const lore = inv.getStackInSlot(index).getLore();
+                            lore.forEach((line) => {
+                                debugName === "console" ? console.log(line) : ChatLib.chat(line);
+                            });
+                            return;
+                        }, 3000);
+                    }
+                    const lore = Player.getHeldItem().getLore();
+                    lore.forEach((line) => {
+                        debugName === "console" ? console.log(line) : ChatLib.chat(line);
+                    });
+                    break;
+                }
+                case "inv":
+                    setTimeout(() => {
+                        const inv = Player.getContainer();
+                        if (!inv) return;
+                        ChatLib.chat(inv.getName());
+                    }, 3000);
+                    break;
+                case "id": {
+                    const id = Player.getHeldItem().getID();
+                    ChatLib.chat(id);
+                    break;
+                }
+                case "slotid": {
+                    showChatPacket = !showChatPacket;
+                    showChatPacket ? sendSlotId.register() : sendSlotId.unregister();
+                    showChatPacket ? ChatLib.chat("sendSlotId on") : ChatLib.chat("sendSlotId off");
+                    break;
+                }
+                case "nbt": {
+                    if (Player.getContainer()) {
+                        setTimeout(() => {
+                            const inv = Player.getContainer();
+                            const under = Client.currentGui.getSlotUnderMouse();
+                            if (!under) return;
+                            const index = under.getIndex();
+                            const nbt = inv.getStackInSlot(index).getNBT().toObject();
+                            console.log(JSON.stringify(nbt, null, 4));
+                            return;
+                        }, 3000);
+                    }
+                    const item = Player.getHeldItem()?.getNBT();
+                    console.log(item);
+                    break;
+                }
+                case "tab":
+                    if (!debugName) {
+                        ChatLib.chat("no name");
+                        return;
+                    }
+                    getTab(debugName);
+                    break;
             }
             break;
         default:
@@ -181,3 +259,20 @@ const viewPacket = register("packetSent", (packet, event) => {
     const message = packet.func_149439_c();
     ChatLib.chat(message);
 }).setFilteredClass(C01PacketChatMessage).unregister();
+
+const sendSlotId = register("guiMouseClick", (mx, my, mbtn, gui, event) => {
+    const clickedSlot = Client.currentGui.getSlotUnderMouse();
+    if (!clickedSlot) return;
+    const index = clickedSlot.getIndex();
+    ChatLib.chat(index);
+}).unregister();
+
+function getTab(text, format) {
+    TabList?.getNames()?.forEach(line => {
+        const unFormatLine = ChatLib.removeFormatting(line).trim();
+        if (unFormatLine.includes(text)) {
+            format ? ChatLib.chat(line) : ChatLib.chat(unFormatLine);
+            return;
+        }
+    })
+}

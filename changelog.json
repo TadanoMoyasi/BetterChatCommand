@@ -1,9 +1,4 @@
 [
-	"-Added a setting that allows you to use PartyCommand even if you are not in a Party.",
-	"-Added autoRequeue.",
-	"-Added afterInvite to BCC as well.",
-	"-Added an experiment to realRNG.",
-	"-Added title to display in downtime.",
-	"-!allinv now also requires confirmation.",
-	"I've rewritten almost all the code, so there are probably some bugs."
+	"-You can now invite multiple people using afterInvite.",
+    ""
 ]

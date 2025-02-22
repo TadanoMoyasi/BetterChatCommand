@@ -13,9 +13,11 @@ function afterInvite(match) {
     inviteList.splice(pos, 1);
 }
 
-export function setAfterInvite(player) {
-    inviteList.push(player.toLowerCase());
-    ChatLib.chat(`${formatPrefix} ${player} set to AfterInviteList`);
+export function setAfterInvite(players) {
+    players.forEach(player => {
+        inviteList.push(player.toLowerCase());
+        ChatLib.chat(`${formatPrefix} ${player} set to AfterInviteList`);
+    })
 }
 
 export function resetInvite() {

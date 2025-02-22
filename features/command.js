@@ -104,7 +104,7 @@ register("command", (...args) => {
                 resetInvite();
                 return;
             }
-            setAfterInvite(name);
+            setAfterInvite(args.slice(1));
             break;
         case "debug":
             if (!name) {
